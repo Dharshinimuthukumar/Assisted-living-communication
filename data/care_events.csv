@@ -1,0 +1,101 @@
+event_id,resident_id,event_datetime,event_type,observation,assistance_level,urgency,exception_flag,staff_note,created_by
+EVT001,RES001,2026-09-03 14:30:00,Social Activity,Resident participated in the afternoon music session with minimal assistance.,Minimal,Low,0,Devi enjoyed playing the tambourine; staff ensured seating was near the front. Internal staff note not for family.,Madhu
+EVT002,RES001,2026-09-04 10:15:00,Mobility,Resident declined scheduled physical mobility session due to feeling fatigued; resting in room.,Moderate,High,1,Devi reported general tiredness after breakfast. Hydration offered. Staff will re-check at 14:00.,Madhu
+EVT003,RES003,2026-09-04 09:00:00,Morning Routine,Resident completed morning hygiene routine independently and enjoyed breakfast in the dining area.,Independent,Normal,0,Kamala was in cheerful spirits. Finished tea.,Madhu
+EVT004,RES003,2026-09-03 18:00:00,Personal Care,Staff provided assistance with evening transfer and personal care routine.,Moderate,Normal,0,Detailed staff log for night team handover.,Madhu
+EVT005,RES002,2026-09-04 08:30:00,Morning Routine,Resident exhibited fever of 101F and suspected chest infection; staff administered paracetamol 500mg.,High,High,1,Clinical nurse practitioner paged. Handover required immediately.,Madhu
+EVT006,RES004,2026-09-04 11:00:00,Activity,,,Normal,0,Incomplete record test.,Madhu
+EVT007,RES001,2026-08-29 11:00:00,Activity,Resident participated in the afternoon reading group and socialized with peers.,Independent,Low,0,Staff shift log reference #7. Handover checked by Madhu.,Madhu
+EVT008,RES002,2026-08-20 17:15:00,Social Activity,Resident attended social bingo gathering in the main lounge.,Minimal,Low,0,Staff shift log reference #8. Handover checked by Madhu.,Madhu
+EVT009,RES004,2026-08-30 11:00:00,Other Operational Event,Facility laundry delivered and organized in resident closet by staff.,Independent,Low,0,Staff shift log reference #9. Handover checked by Madhu.,Madhu
+EVT010,RES001,2026-08-30 15:00:00,Activity,Resident participated in the afternoon reading group and socialized with peers.,Independent,Low,0,Staff shift log reference #10. Handover checked by Madhu.,Madhu
+EVT011,RES001,2026-08-28 10:30:00,Scheduled Appointment,Resident attended scheduled facility podiatry visit on time with staff escort.,Minimal,Normal,0,Staff shift log reference #11. Handover checked by Madhu.,Madhu
+EVT012,RES003,2026-09-03 13:45:00,Meal,Resident enjoyed breakfast in the communal dining hall independently.,Independent,Low,0,Staff shift log reference #12. Handover checked by Madhu.,Madhu
+EVT013,RES001,2026-08-23 15:45:00,Mobility,Resident felt dizzy during hallway walk; assisted safely to chair.,High,High,1,Staff shift log reference #13. Handover checked by Madhu.,Madhu
+EVT014,RES005,2026-08-30 12:00:00,Other Operational Event,Facility laundry delivered and organized in resident closet by staff.,Independent,Low,0,Staff shift log reference #14. Handover checked by Madhu.,Madhu
+EVT015,RES001,2026-08-31 09:45:00,Activity,Resident joined arts and crafts session and completed watercolor painting.,Minimal,Low,0,Staff shift log reference #15. Handover checked by Madhu.,Madhu
+EVT016,RES005,2026-08-27 19:45:00,Meal,Resident requested late supper tray in room. Finished soup.,Minimal,Normal,0,Staff shift log reference #16. Handover checked by Madhu.,Madhu
+EVT017,RES003,2026-08-21 14:15:00,Activity,Resident did not attend group activity; rested quietly in room after lunch.,Minimal,Normal,1,Staff shift log reference #17. Handover checked by Madhu.,Madhu
+EVT018,RES002,2026-08-24 15:15:00,Morning Routine,Staff provided moderate assistance with morning hygiene and grooming.,Moderate,Normal,0,Staff shift log reference #18. Handover checked by Madhu.,Madhu
+EVT019,RES003,2026-08-29 08:30:00,Personal Care,Resident required high assistance during transfer; staff used slide board.,High,Normal,0,Staff shift log reference #19. Handover checked by Madhu.,Madhu
+EVT020,RES002,2026-09-01 20:45:00,Personal Care,Evening personal care routine completed with moderate staff assistance.,Moderate,Normal,0,Staff shift log reference #20. Handover checked by Madhu.,Madhu
+EVT021,RES002,2026-09-02 09:15:00,Mobility,Resident completed their daily walking routine in the hallway with walking frame.,Minimal,Normal,0,Staff shift log reference #21. Handover checked by Madhu.,Madhu
+EVT022,RES002,2026-08-23 08:15:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #22. Handover checked by Madhu.,Madhu
+EVT023,RES003,2026-08-30 13:45:00,Personal Care,Staff assisted resident with afternoon personal care and wardrobe change.,Moderate,Normal,0,Staff shift log reference #23. Handover checked by Madhu.,Madhu
+EVT024,RES001,2026-08-22 11:30:00,Scheduled Appointment,Resident attended scheduled facility podiatry visit on time with staff escort.,Minimal,Normal,0,Staff shift log reference #24. Handover checked by Madhu.,Madhu
+EVT025,RES001,2026-08-23 10:15:00,Mobility,Resident felt dizzy during hallway walk; assisted safely to chair.,High,High,1,Staff shift log reference #25. Handover checked by Madhu.,Madhu
+EVT026,RES001,2026-08-30 20:45:00,Meal,Resident requested late supper tray in room. Finished soup.,Minimal,Normal,0,Staff shift log reference #26. Handover checked by Madhu.,Madhu
+EVT027,RES003,2026-08-30 15:15:00,Personal Care,Staff assisted resident with afternoon personal care and wardrobe change.,Moderate,Normal,0,Staff shift log reference #27. Handover checked by Madhu.,Madhu
+EVT028,RES004,2026-08-29 19:15:00,Mobility,Resident completed their daily walking routine in the hallway with walking frame.,Minimal,Normal,0,Staff shift log reference #28. Handover checked by Madhu.,Madhu
+EVT029,RES004,2026-09-04 11:00:00,Activity,Resident participated in the afternoon reading group and socialized with peers.,Independent,Low,0,Staff shift log reference #29. Handover checked by Madhu.,Madhu
+EVT030,RES002,2026-08-22 13:30:00,Other Operational Event,Facility laundry delivered and organized in resident closet by staff.,Independent,Low,0,Staff shift log reference #30. Handover checked by Madhu.,Madhu
+EVT031,RES001,2026-08-22 16:00:00,Social Activity,Resident enjoyed evening music session and engaged in group singing.,Independent,Low,0,Staff shift log reference #31. Handover checked by Madhu.,Madhu
+EVT032,RES002,2026-09-02 13:45:00,Social Activity,Resident attended social bingo gathering in the main lounge.,Minimal,Low,0,Staff shift log reference #32. Handover checked by Madhu.,Madhu
+EVT033,RES005,2026-08-31 09:30:00,Mobility,Resident practiced hallway mobility exercises with physical therapy aide.,Moderate,Normal,0,Staff shift log reference #33. Handover checked by Madhu.,Madhu
+EVT034,RES002,2026-08-20 14:45:00,Activity,Resident joined arts and crafts session and completed watercolor painting.,Minimal,Low,0,Staff shift log reference #34. Handover checked by Madhu.,Madhu
+EVT035,RES003,2026-08-30 19:15:00,Activity,Resident did not attend group activity; rested quietly in room after lunch.,Minimal,Normal,1,Staff shift log reference #35. Handover checked by Madhu.,Madhu
+EVT036,RES002,2026-08-20 12:00:00,Personal Care,Staff assisted resident with afternoon personal care and wardrobe change.,Moderate,Normal,0,Staff shift log reference #36. Handover checked by Madhu.,Madhu
+EVT037,RES001,2026-08-21 15:30:00,Personal Care,Evening personal care routine completed with moderate staff assistance.,Moderate,Normal,0,Staff shift log reference #37. Handover checked by Madhu.,Madhu
+EVT038,RES004,2026-09-03 17:00:00,Personal Care,Staff assisted resident with afternoon personal care and wardrobe change.,Moderate,Normal,0,Staff shift log reference #38. Handover checked by Madhu.,Madhu
+EVT039,RES004,2026-08-24 09:00:00,Personal Care,Evening personal care routine completed with moderate staff assistance.,Moderate,Normal,0,Staff shift log reference #39. Handover checked by Madhu.,Madhu
+EVT040,RES002,2026-08-23 09:15:00,Social Activity,Resident attended social bingo gathering in the main lounge.,Minimal,Low,0,Staff shift log reference #40. Handover checked by Madhu.,Madhu
+EVT041,RES004,2026-08-28 08:45:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #41. Handover checked by Madhu.,Madhu
+EVT042,RES003,2026-08-27 20:00:00,Scheduled Appointment,Resident attended scheduled facility podiatry visit on time with staff escort.,Minimal,Normal,0,Staff shift log reference #42. Handover checked by Madhu.,Madhu
+EVT043,RES005,2026-08-30 08:30:00,Activity,Resident attended the gardening activity in the courtyard with minimal assistance.,Minimal,Low,0,Staff shift log reference #43. Handover checked by Madhu.,Madhu
+EVT044,RES004,2026-09-03 12:45:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #44. Handover checked by Madhu.,Madhu
+EVT045,RES003,2026-08-21 12:00:00,Personal Care,Resident required high assistance during transfer; staff used slide board.,High,Normal,0,Staff shift log reference #45. Handover checked by Madhu.,Madhu
+EVT046,RES003,2026-08-29 14:00:00,Morning Routine,Staff supported resident through their morning routine with minimal assistance.,Minimal,Normal,0,Staff shift log reference #46. Handover checked by Madhu.,Madhu
+EVT047,RES001,2026-08-30 15:30:00,Mobility,Resident felt dizzy during hallway walk; assisted safely to chair.,High,High,1,Staff shift log reference #47. Handover checked by Madhu.,Madhu
+EVT048,RES005,2026-09-01 13:30:00,Mobility,Resident felt dizzy during hallway walk; assisted safely to chair.,High,High,1,Staff shift log reference #48. Handover checked by Madhu.,Madhu
+EVT049,RES002,2026-08-29 18:45:00,Social Activity,Resident attended social bingo gathering in the main lounge.,Minimal,Low,0,Staff shift log reference #49. Handover checked by Madhu.,Madhu
+EVT050,RES001,2026-09-01 10:00:00,Personal Care,Resident required high assistance during transfer; staff used slide board.,High,Normal,0,Staff shift log reference #50. Handover checked by Madhu.,Madhu
+EVT051,RES005,2026-08-21 19:00:00,Other Operational Event,Facility laundry delivered and organized in resident closet by staff.,Independent,Low,0,Staff shift log reference #51. Handover checked by Madhu.,Madhu
+EVT052,RES003,2026-08-25 12:45:00,Activity,Resident participated in the afternoon reading group and socialized with peers.,Independent,Low,0,Staff shift log reference #52. Handover checked by Madhu.,Madhu
+EVT053,RES001,2026-08-20 17:00:00,Morning Routine,Resident completed morning routine independently with verbal reminders.,Independent,Low,0,Staff shift log reference #53. Handover checked by Madhu.,Madhu
+EVT054,RES002,2026-08-20 18:00:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #54. Handover checked by Madhu.,Madhu
+EVT055,RES004,2026-08-25 14:00:00,Morning Routine,Resident completed morning routine independently with verbal reminders.,Independent,Low,0,Staff shift log reference #55. Handover checked by Madhu.,Madhu
+EVT056,RES005,2026-09-02 11:45:00,Activity,Resident did not attend group activity; rested quietly in room after lunch.,Minimal,Normal,1,Staff shift log reference #56. Handover checked by Madhu.,Madhu
+EVT057,RES001,2026-08-28 15:45:00,Morning Routine,Resident completed morning routine independently with verbal reminders.,Independent,Low,0,Staff shift log reference #57. Handover checked by Madhu.,Madhu
+EVT058,RES003,2026-08-20 15:00:00,Activity,Resident joined arts and crafts session and completed watercolor painting.,Minimal,Low,0,Staff shift log reference #58. Handover checked by Madhu.,Madhu
+EVT059,RES002,2026-08-22 10:30:00,Scheduled Appointment,Resident attended scheduled facility podiatry visit on time with staff escort.,Minimal,Normal,0,Staff shift log reference #59. Handover checked by Madhu.,Madhu
+EVT060,RES004,2026-08-24 18:15:00,Meal,Resident declined dinner tray citing lack of appetite; staff offered fruit cup.,Minimal,Normal,1,Staff shift log reference #60. Handover checked by Madhu.,Madhu
+EVT061,RES002,2026-08-23 20:30:00,Meal,Resident declined dinner tray citing lack of appetite; staff offered fruit cup.,Minimal,Normal,1,Staff shift log reference #61. Handover checked by Madhu.,Madhu
+EVT062,RES002,2026-09-04 16:30:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #62. Handover checked by Madhu.,Madhu
+EVT063,RES002,2026-08-29 13:00:00,Scheduled Appointment,Resident attended scheduled facility podiatry visit on time with staff escort.,Minimal,Normal,0,Staff shift log reference #63. Handover checked by Madhu.,Madhu
+EVT064,RES005,2026-08-29 20:00:00,Mobility,Resident completed their daily walking routine in the hallway with walking frame.,Minimal,Normal,0,Staff shift log reference #64. Handover checked by Madhu.,Madhu
+EVT065,RES005,2026-08-22 20:45:00,Meal,Resident requested late supper tray in room. Finished soup.,Minimal,Normal,0,Staff shift log reference #65. Handover checked by Madhu.,Madhu
+EVT066,RES004,2026-08-23 09:30:00,Meal,Resident attended lunch at 12:30. Finished meal with moderate assistance.,Moderate,Normal,0,Staff shift log reference #66. Handover checked by Madhu.,Madhu
+EVT067,RES001,2026-08-23 10:45:00,Activity,Resident joined arts and crafts session and completed watercolor painting.,Minimal,Low,0,Staff shift log reference #67. Handover checked by Madhu.,Madhu
+EVT068,RES003,2026-08-29 12:00:00,Social Activity,Resident enjoyed evening music session and engaged in group singing.,Independent,Low,0,Staff shift log reference #68. Handover checked by Madhu.,Madhu
+EVT069,RES004,2026-08-25 12:30:00,Personal Care,Evening personal care routine completed with moderate staff assistance.,Moderate,Normal,0,Staff shift log reference #69. Handover checked by Madhu.,Madhu
+EVT070,RES005,2026-08-28 08:00:00,Social Activity,Resident enjoyed evening music session and engaged in group singing.,Independent,Low,0,Staff shift log reference #70. Handover checked by Madhu.,Madhu
+EVT071,RES005,2026-08-27 17:15:00,Morning Routine,Staff provided moderate assistance with morning hygiene and grooming.,Moderate,Normal,0,Staff shift log reference #71. Handover checked by Madhu.,Madhu
+EVT072,RES002,2026-09-03 17:30:00,Activity,Resident attended the gardening activity in the courtyard with minimal assistance.,Minimal,Low,0,Staff shift log reference #72. Handover checked by Madhu.,Madhu
+EVT073,RES001,2026-09-04 19:00:00,Activity,Resident joined arts and crafts session and completed watercolor painting.,Minimal,Low,0,Staff shift log reference #73. Handover checked by Madhu.,Madhu
+EVT074,RES003,2026-08-25 14:00:00,Morning Routine,Staff provided moderate assistance with morning hygiene and grooming.,Moderate,Normal,0,Staff shift log reference #74. Handover checked by Madhu.,Madhu
+EVT075,RES004,2026-08-23 09:30:00,Personal Care,Staff assisted resident with afternoon personal care and wardrobe change.,Moderate,Normal,0,Staff shift log reference #75. Handover checked by Madhu.,Madhu
+EVT076,RES003,2026-08-24 19:15:00,Mobility,Resident practiced hallway mobility exercises with physical therapy aide.,Moderate,Normal,0,Staff shift log reference #76. Handover checked by Madhu.,Madhu
+EVT077,RES003,2026-09-02 20:30:00,Morning Routine,Staff provided moderate assistance with morning hygiene and grooming.,Moderate,Normal,0,Staff shift log reference #77. Handover checked by Madhu.,Madhu
+EVT078,RES002,2026-08-23 13:45:00,Morning Routine,Staff provided moderate assistance with morning hygiene and grooming.,Moderate,Normal,0,Staff shift log reference #78. Handover checked by Madhu.,Madhu
+EVT079,RES005,2026-08-30 18:00:00,Personal Care,Resident required high assistance during transfer; staff used slide board.,High,Normal,0,Staff shift log reference #79. Handover checked by Madhu.,Madhu
+EVT080,RES003,2026-08-30 10:15:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #80. Handover checked by Madhu.,Madhu
+EVT081,RES004,2026-08-25 14:15:00,Morning Routine,Staff supported resident through their morning routine with minimal assistance.,Minimal,Normal,0,Staff shift log reference #81. Handover checked by Madhu.,Madhu
+EVT082,RES002,2026-08-26 18:15:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #82. Handover checked by Madhu.,Madhu
+EVT083,RES001,2026-08-23 10:30:00,Morning Routine,Staff supported resident through their morning routine with minimal assistance.,Minimal,Normal,0,Staff shift log reference #83. Handover checked by Madhu.,Madhu
+EVT084,RES003,2026-09-03 12:45:00,Personal Care,Staff assisted resident with afternoon personal care and wardrobe change.,Moderate,Normal,0,Staff shift log reference #84. Handover checked by Madhu.,Madhu
+EVT085,RES004,2026-08-26 11:30:00,Morning Routine,Staff noted resident coughed frequently and complained of chest congestion.,Moderate,High,1,Staff shift log reference #85. Handover checked by Madhu.,Madhu
+EVT086,RES004,2026-08-29 14:15:00,Meal,Resident requested late supper tray in room. Finished soup.,Minimal,Normal,0,Staff shift log reference #86. Handover checked by Madhu.,Madhu
+EVT087,RES005,2026-09-03 08:00:00,Scheduled Appointment,Resident completed optical review visit at the facility clinic.,Independent,Low,0,Staff shift log reference #87. Handover checked by Madhu.,Madhu
+EVT088,RES004,2026-08-24 10:00:00,Meal,Resident attended lunch at 12:30. Finished meal with moderate assistance.,Moderate,Normal,0,Staff shift log reference #88. Handover checked by Madhu.,Madhu
+EVT089,RES003,2026-08-27 11:00:00,Other Operational Event,Facility laundry delivered and organized in resident closet by staff.,Independent,Low,0,Staff shift log reference #89. Handover checked by Madhu.,Madhu
+EVT090,RES002,2026-08-30 20:45:00,Mobility,Resident felt dizzy during hallway walk; assisted safely to chair.,High,High,1,Staff shift log reference #90. Handover checked by Madhu.,Madhu
+EVT091,RES005,2026-08-29 11:15:00,Activity,Resident attended the gardening activity in the courtyard with minimal assistance.,Minimal,Low,0,Staff shift log reference #91. Handover checked by Madhu.,Madhu
+EVT092,RES003,2026-09-02 18:00:00,Activity,Resident did not attend group activity; rested quietly in room after lunch.,Minimal,Normal,1,Staff shift log reference #92. Handover checked by Madhu.,Madhu
+EVT093,RES002,2026-09-01 11:45:00,Morning Routine,Staff noted resident coughed frequently and complained of chest congestion.,Moderate,High,1,Staff shift log reference #93. Handover checked by Madhu.,Madhu
+EVT094,RES001,2026-08-24 10:45:00,Personal Care,Resident required high assistance during transfer; staff used slide board.,High,Normal,0,Staff shift log reference #94. Handover checked by Madhu.,Madhu
+EVT095,RES003,2026-08-24 08:00:00,Meal,Resident requested late supper tray in room. Finished soup.,Minimal,Normal,0,Staff shift log reference #95. Handover checked by Madhu.,Madhu
+EVT096,RES004,2026-09-02 09:45:00,Meal,Resident declined dinner tray citing lack of appetite; staff offered fruit cup.,Minimal,Normal,1,Staff shift log reference #96. Handover checked by Madhu.,Madhu
+EVT097,RES001,2026-08-27 11:30:00,Activity,Resident did not attend group activity; rested quietly in room after lunch.,Minimal,Normal,1,Staff shift log reference #97. Handover checked by Madhu.,Madhu
+EVT098,RES001,2026-08-27 10:15:00,Morning Routine,Staff provided moderate assistance with morning hygiene and grooming.,Moderate,Normal,0,Staff shift log reference #98. Handover checked by Madhu.,Madhu
+EVT099,RES004,2026-08-20 14:30:00,Personal Care,Evening personal care routine completed with moderate staff assistance.,Moderate,Normal,0,Staff shift log reference #99. Handover checked by Madhu.,Madhu
+EVT100,RES004,2026-08-29 14:30:00,Meal,Resident requested late supper tray in room. Finished soup.,Minimal,Normal,0,Staff shift log reference #100. Handover checked by Madhu.,Madhu

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Care Events - Assisted-Living Facility{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Operational Care Events</h1>
+        <p class="page-subtitle">Standardized daily observations, assistance logs, and operational exceptions</p>
+    </div>
+    <div>
+        <button onclick="openModal('addEventModal')" class="btn btn-primary">+ Record Care Event</button>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card" style="padding: 14px 20px;">
+    <form method="GET" action="{{ url_for('care_events_list') }}" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <div>
+            <label class="form-label" style="margin-bottom: 2px;">Filter Resident:</label>
+            <select name="resident_id" class="form-control" style="width: auto; display: inline-block;">
+                <option value="">All Residents</option>
+                {% for r in residents %}
+                <option value="{{ r.resident_id }}" {% if selected_res == r.resident_id %}selected{% endif %}>{{ r.resident_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label" style="margin-bottom: 2px;">Filter Urgency:</label>
+            <select name="urgency" class="form-control" style="width: auto; display: inline-block;">
+                <option value="">All Urgencies</option>
+                <option value="Low" {% if selected_urgency == 'Low' %}selected{% endif %}>Low</option>
+                <option value="Normal" {% if selected_urgency == 'Normal' %}selected{% endif %}>Normal</option>
+                <option value="High" {% if selected_urgency == 'High' %}selected{% endif %}>High</option>
+            </select>
+        </div>
+        <div style="margin-top: 20px;">
+            <button type="submit" class="btn btn-sm btn-secondary">Apply Filter</button>
+            <a href="{{ url_for('care_events_list') }}" class="btn btn-sm btn-outline">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Care Events Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Event ID</th>
+                    <th>Resident</th>
+                    <th>Date & Time</th>
+                    <th>Category</th>
+                    <th>Operational Observation</th>
+                    <th>Assistance</th>
+                    <th>Urgency</th>
+                    <th>Staff Note (Confidential)</th>
+                    <th>Pipeline Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evt in events %}
+                <tr>
+                    <td><code>{{ evt.event_id }}</code></td>
+                    <td><strong>{{ evt.resident_name }}</strong></td>
+                    <td><small>{{ evt.event_datetime }}</small></td>
+                    <td><span class="badge badge-info">{{ evt.event_type }}</span></td>
+                    <td style="max-width: 280px;">
+                        {{ evt.observation or '<em style="color:var(--danger)">[Missing Observation]</em>'|safe }}
+                        {% if evt.exception_flag %}
+                            <span class="badge badge-blocked" style="font-size: 0.65rem; margin-left: 4px;">Exception</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-minimal">{{ evt.assistance_level or 'Unspecified' }}</span></td>
+                    <td>
+                        <span class="badge {% if evt.urgency == 'High' %}badge-high{% elif evt.urgency == 'Normal' %}badge-moderate{% else %}badge-low{% endif %}">
+                            {{ evt.urgency }}
+                        </span>
+                    </td>
+                    <td style="max-width: 200px;">
+                        <div class="staff-note-box" style="margin: 0; padding: 4px 8px;">
+                            <span class="staff-note-badge" style="font-size: 0.65rem;">Internal Only</span>
+                            <div style="font-size: 0.78rem; line-height: 1.3;">{{ evt.staff_note or 'None' }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('communication_view') }}?event_id={{ evt.event_id }}" class="btn btn-sm btn-primary">
+                            Process Update
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Log New Care Event -->
+<div id="addEventModal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="card-title">Record New Operational Care Event</h3>
+            <button onclick="closeModal('addEventModal')" class="btn btn-sm btn-outline" style="border: none;">✕</button>
+        </div>
+        <form action="{{ url_for('add_care_event') }}" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="resident_id">Resident</label>
+                    <select name="resident_id" id="resident_id" class="form-control" required>
+                        {% for r in residents %}
+                        <option value="{{ r.resident_id }}">{{ r.resident_name }} ({{ r.independence_level }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="event_type">Operational Event Type</label>
+                    <select name="event_type" id="event_type" class="form-control" required>
+                        <option value="Morning Routine">Morning Routine</option>
+                        <option value="Meal">Meal</option>
+                        <option value="Activity">Activity</option>
+                        <option value="Social Activity">Social Activity</option>
+                        <option value="Mobility">Mobility</option>
+                        <option value="Personal Care">Personal Care</option>
+                        <option value="Scheduled Appointment">Scheduled Appointment</option>
+                        <option value="Other Operational Event">Other Operational Event</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="assistance_level">Observed Assistance Level</label>
+                    <select name="assistance_level" id="assistance_level" class="form-control" required>
+                        <option value="Independent">Independent (No physical aid required)</option>
+                        <option value="Minimal">Minimal (Verbal cues or light guidance)</option>
+                        <option value="Moderate">Moderate (Hands-on staff assistance)</option>
+                        <option value="High">High (Full physical assistance / multiple staff)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="urgency">Operational Urgency</label>
+                    <select name="urgency" id="urgency" class="form-control" required>
+                        <option value="Low">Low (Standard routine log)</option>
+                        <option value="Normal" selected>Normal (Standard daily update)</option>
+                        <option value="High">High (Notable event requiring review)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="observation">Observable Operational Event (Clean, non-medical description)</label>
+                    <textarea name="observation" id="observation" class="form-control" rows="3" placeholder="e.g. Resident attended lunch in the dining room and finished meal with moderate assistance." required></textarea>
+                    <small style="color: var(--text-muted); font-size: 0.78rem;">
+                        ⚠️ Do not include medical conclusions, clinical diagnoses, or medication notes.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="staff_note">Internal Staff Note (Confidential — Strictly NOT shared with family)</label>
+                    <textarea name="staff_note" id="staff_note" class="form-control" rows="2" placeholder="e.g. Handover shift note for evening team."></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                        <input type="checkbox" name="exception_flag" value="1">
+                        <span>Mark as Operational Exception (Flags for mandatory human review)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('addEventModal')" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save & Log Care Event</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

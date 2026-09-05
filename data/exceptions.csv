@@ -1,0 +1,3 @@
+exception_id,event_id,resident_id,exception_type,description,severity,review_required,resolution_status
+EXC001,EVT002,RES001,Missed Scheduled Session,Resident declined scheduled physical mobility session due to fatigue.,Moderate,1,Under Review
+EXC002,EVT005,RES002,Clinical Terminology Intercepted,Observation contained medical vocabulary requiring staff review before family communication.,High,1,Open

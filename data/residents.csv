@@ -1,0 +1,6 @@
+resident_id,resident_name,age_group,independence_level,preferred_communication_style,active_status
+RES001,Devi Raman,75-84,Needs Moderate Assistance,Brief & Timely,1
+RES002,Ramesh Sharma,85+,Needs High Assistance,Daily Summary,1
+RES003,Kamala Sundaram,70-74,Needs Minimal Assistance,Weekly Digest,1
+RES004,Mohan Patel,75-84,Independent,Direct & Independent,1
+RES005,Lakshmi Narayanan,80-84,Needs Moderate Assistance,Evening Recap,1

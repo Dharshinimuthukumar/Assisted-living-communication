@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ resident.resident_name }} - Resident Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a href="{{ url_for('residents_list') }}" class="btn btn-sm btn-outline" style="margin-bottom: 8px;">← Back to Residents</a>
+        <h1 class="page-title">{{ resident.resident_name }}</h1>
+        <p class="page-subtitle">Resident ID: <code>{{ resident.resident_id }}</code> | Age Group: {{ resident.age_group }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('care_events_list') }}?resident_id={{ resident.resident_id }}" class="btn btn-primary">+ Log Event for Resident</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 24px;">
+    <!-- Profile & Independence Overview -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Independence & Profile</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.9rem;">
+            <div>
+                <strong style="color: var(--text-muted); display: block; font-size: 0.8rem; text-transform: uppercase;">Assisted-Living Independence Tier</strong>
+                <span style="font-size: 1.1rem; font-weight: 700;">{{ resident.independence_level }}</span>
+            </div>
+            <div>
+                <strong style="color: var(--text-muted); display: block; font-size: 0.8rem; text-transform: uppercase;">Preferred Family Communication Style</strong>
+                <span>{{ resident.preferred_communication_style }}</span>
+            </div>
+            <div>
+                <strong style="color: var(--text-muted); display: block; font-size: 0.8rem; text-transform: uppercase;">Operational Status</strong>
+                <span class="badge badge-active">Active Resident</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authorized Family Contacts & Consent -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Authorized Family Contacts & Consent</h2>
+            <a href="{{ url_for('consent_matrix') }}" class="btn btn-sm btn-outline">Manage Consent</a>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Family Member</th>
+                        <th>Relationship</th>
+                        <th>Role</th>
+                        <th>Consent Status</th>
+                        <th>Permissions Summary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fam in family_contacts %}
+                    <tr>
+                        <td><strong>{{ fam.family_name }}</strong></td>
+                        <td>{{ fam.relationship }}</td>
+                        <td><span class="badge badge-info">{{ fam.role }}</span></td>
+                        <td>
+                            <span class="badge {% if fam.consent_status == 'Active' %}badge-approved{% elif fam.consent_status == 'Revoked' %}badge-blocked{% else %}badge-pending{% endif %}">
+                                {{ fam.consent_status or 'None' }}
+                            </span>
+                        </td>
+                        <td style="font-size: 0.82rem; color: var(--text-muted);">
+                            {% if fam.consent_status == 'Active' %}
+                                Routine: {{ '✓' if fam.routine_updates else '✗' }} | 
+                                Activity: {{ '✓' if fam.care_activity_updates else '✗' }} | 
+                                Exceptions: {{ '✓' if fam.exception_updates else '✗' }} | 
+                                Q&A: {{ '✓' if fam.communication_questions else '✗' }}
+                            {% else %}
+                                <em>All disclosures revoked</em>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted);">No family contacts configured.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Care Event History -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Recorded Care Events Timeline</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Category</th>
+                    <th>Operational Observation</th>
+                    <th>Assistance Level</th>
+                    <th>Urgency</th>
+                    <th>Internal Staff Note (Staff Only)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evt in care_events %}
+                <tr>
+                    <td><small>{{ evt.event_datetime }}</small></td>
+                    <td><span class="badge badge-info">{{ evt.event_type }}</span></td>
+                    <td>{{ evt.observation or '<em style="color:var(--danger)">[Blank Observation - Missing Data]</em>'|safe }}</td>
+                    <td>
+                        <span class="badge badge-minimal">{{ evt.assistance_level or 'Unspecified' }}</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if evt.urgency == 'High' %}badge-high{% elif evt.urgency == 'Normal' %}badge-moderate{% else %}badge-low{% endif %}">
+                            {{ evt.urgency }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="staff-note-box" style="margin: 0; padding: 6px 10px;">
+                            <span class="staff-note-badge">Internal Note</span>
+                            <p style="margin: 0; font-size: 0.8rem;">{{ evt.staff_note or 'None' }}</p>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('communication_view') }}?event_id={{ evt.event_id }}" class="btn btn-sm btn-secondary">
+                            Process Update
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted);">No care events recorded for this resident.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

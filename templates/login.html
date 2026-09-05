@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - Assisted-Living Operational Communication{% endblock %}
+
+{% block content %}
+<div style="max-width: 540px; margin: 40px auto;">
+    <div class="card" style="padding: 30px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="font-size: 1.6rem; color: var(--primary);">System Authentication</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 6px;">
+                Semester 5 C28 Academic Proof of Concept
+            </p>
+        </div>
+
+        <form action="{{ url_for('login') }}" method="POST" style="margin-bottom: 24px;">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="e.g. Dharshini, Madhu, Kavi" required autofocus>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+        </form>
+
+        <div style="border-top: 1px solid var(--surface-border); padding-top: 20px;">
+            <h2 style="font-size: 0.9rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; text-align: center;">
+                ⚡ One-Click Academic Demo Sign-In
+            </h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <a href="{{ url_for('switch_user', username='Dharshini') }}" class="btn btn-outline btn-sm" style="text-align: left;">
+                    🏢 <strong>Dharshini</strong> (Admin)
+                </a>
+                <a href="{{ url_for('switch_user', username='Madhu') }}" class="btn btn-outline btn-sm" style="text-align: left;">
+                    🩺 <strong>Madhu</strong> (Care Staff)
+                </a>
+                <a href="{{ url_for('switch_user', username='Kavi') }}" class="btn btn-outline btn-sm" style="text-align: left;">
+                    👨‍👩‍👧 <strong>Kavi</strong> (Primary Contact)
+                </a>
+                <a href="{{ url_for('switch_user', username='Charu') }}" class="btn btn-outline btn-sm" style="text-align: left;">
+                    👨‍👩‍👦 <strong>Charu</strong> (Secondary Contact)
+                </a>
+                <a href="{{ url_for('switch_user', username='Hema') }}" class="btn btn-outline btn-sm" style="text-align: left;">
+                    🚨 <strong>Hema</strong> (Emergency Contact)
+                </a>
+                <a href="{{ url_for('switch_user', username='Abi') }}" class="btn btn-outline btn-sm" style="text-align: left;">
+                    👁️ <strong>Abi</strong> (View-Only Contact)
+                </a>
+                <a href="{{ url_for('switch_user', username='Mala') }}" class="btn btn-outline btn-sm" style="text-align: left; grid-column: span 2;">
+                    👨‍👩‍👧 <strong>Mala</strong> (Primary Contact for Mohan)
+                </a>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-light); text-align: center; margin-top: 12px;">
+                Demo passwords correspond to: <code>admin123</code>, <code>staff123</code>, <code>&lt;username&gt;123</code>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

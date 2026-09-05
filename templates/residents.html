@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Residents - Assisted-Living Facility{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Residents Directory & Independence Profiles</h1>
+        <p class="page-subtitle">Assisted-living resident cohort, communication preferences, and care independence levels</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Resident ID</th>
+                    <th>Resident Name</th>
+                    <th>Age Group</th>
+                    <th>Independence Level</th>
+                    <th>Preferred Comm Style</th>
+                    <th>Authorized Family Contacts</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in residents %}
+                <tr>
+                    <td><code>{{ res.resident_id }}</code></td>
+                    <td><strong>{{ res.resident_name }}</strong></td>
+                    <td>{{ res.age_group }}</td>
+                    <td>
+                        {% if res.independence_level == 'Independent' %}
+                            <span class="badge badge-independent">{{ res.independence_level }}</span>
+                        {% elif res.independence_level == 'Needs Minimal Assistance' %}
+                            <span class="badge badge-minimal">{{ res.independence_level }}</span>
+                        {% elif res.independence_level == 'Needs Moderate Assistance' %}
+                            <span class="badge badge-moderate">{{ res.independence_level }}</span>
+                        {% else %}
+                            <span class="badge badge-high">{{ res.independence_level }}</span>
+                        {% endif %}
+                    </td>
+                    <td><span style="font-size: 0.85rem; color: var(--text-muted);">{{ res.preferred_communication_style }}</span></td>
+                    <td>
+                        <span style="font-size: 0.85rem;">{{ res.family_names or 'No linked contacts' }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-active">Active</span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('resident_detail', resident_id=res.resident_id) }}" class="btn btn-sm btn-outline">
+                            View Profile & Care Log
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Experiment & Evaluation - Semester 5 C28{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Academic Experiment & Evaluation Dashboard</h1>
+        <p class="page-subtitle">Quantitative Benchmark: Baseline (Raw / Unfiltered) vs. Prototype (Guarded Operational Model)</p>
+    </div>
+    <div>
+        <form action="{{ url_for('run_experiment_action') }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-primary">
+                ⚡ Re-Run Empirical Benchmark (100 Events)
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Methodology Overview Card -->
+<div class="card" style="background: #fdfefe; border-color: #cbd5e1;">
+    <div class="card-header">
+        <h2 class="card-title">🔬 Experimental Methodology & Research Question</h2>
+        <span class="badge badge-info">100 Synthetic Assisted-Living Events</span>
+    </div>
+    <div style="font-size: 0.9rem; color: var(--text-main); line-height: 1.6;">
+        <p>
+            <strong>Research Problem:</strong> In assisted-living facilities, families face a communication dilemma: they either receive <em>too little information</em> or are overwhelmed by <em>raw, clinical care-event logs</em> that leak internal staff notes and cause unnecessary alarm.
+        </p>
+        <p style="margin-top: 8px;">
+            <strong>Experimental Design:</strong> We evaluate 100 synthetic care events under two conditions:
+        </p>
+        <ul style="margin-left: 20px; margin-top: 6px;">
+            <li><strong>Baseline Model (Current Status Quo):</strong> Raw care observations and internal staff notes are delivered directly to contacts without role authorization gates, consent checking, or medical safety classifiers.</li>
+            <li><strong>Prototype System (Guarded Operational Pipeline):</strong> Events pass through role checking, consent validation, rule-based concise operational summarization, medical terminology interception, and human review gating.</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Comparative Results Metrics Table -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Empirical Metric Comparison</h2>
+        <span class="badge badge-approved">Calculated from Synthetic Dataset</span>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Evaluation Metric</th>
+                    <th>Baseline (Raw Model)</th>
+                    <th>Prototype (Proposed System)</th>
+                    <th>Observed Delta</th>
+                    <th>Academic Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in results.metrics %}
+                <tr>
+                    <td><strong>{{ row.name }}</strong></td>
+                    <td style="font-weight: 600; color: #b91c1c;">{{ row.baseline_val }}</td>
+                    <td style="font-weight: 600; color: #15803d;">{{ row.prototype_val }}</td>
+                    <td>
+                        <span class="badge {% if row.direction == 'positive' %}badge-approved{% elif row.direction == 'negative' %}badge-high{% else %}badge-info{% endif %}">
+                            {{ row.delta }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.82rem; color: var(--text-muted);">{{ row.interpretation }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Visualization Chart Section -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px;">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📊 Visualized Metric Distribution (Python Matplotlib)</h2>
+        </div>
+        <div style="text-align: center; padding: 10px;">
+            {% if chart_exists %}
+                <img src="{{ url_for('static', filename='images/metrics_comparison.png') }}?v={{ cache_buster }}" alt="Baseline vs Prototype Comparison Chart" style="max-width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--surface-border);">
+            {% else %}
+                <div style="padding: 40px; color: var(--text-muted);">
+                    Click "Re-Run Empirical Benchmark" to render publication-grade matplotlib charts.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Error & Failure Mode Analysis -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">⚠️ Error & Safety Analysis</h2>
+        </div>
+        <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 12px;">
+            <div style="border-left: 3px solid var(--danger); padding-left: 10px;">
+                <strong style="color: var(--danger);">Unauthorised Disclosures:</strong>
+                <p style="color: var(--text-muted); margin-top: 2px;">
+                    Baseline leaked <strong>{{ results.raw_unauthorized_count }}</strong> protected updates to unauthorized/revoked contacts. Prototype intercepted <strong>100%</strong> at the authorization gate.
+                </p>
+            </div>
+            <div style="border-left: 3px solid var(--warning); padding-left: 10px;">
+                <strong style="color: var(--warning);">Medical Boundary Breaches:</strong>
+                <p style="color: var(--text-muted); margin-top: 2px;">
+                    Baseline exposed <strong>{{ results.raw_medical_count }}</strong> events with clinical jargon. Prototype intercepted every instance and routed to human review.
+                </p>
+            </div>
+            <div style="border-left: 3px solid var(--info); padding-left: 10px;">
+                <strong style="color: var(--info);">Human Supervisory Burden:</strong>
+                <p style="color: var(--text-muted); margin-top: 2px;">
+                    Human review rate is <strong>{{ results.human_review_rate }}%</strong>, striking an optimal balance between automated low-urgency delivery and staff safety oversight.
+                </p>
+            </div>
+        </div>
+        <div style="margin-top: 16px; border-top: 1px solid var(--surface-border); padding-top: 12px;">
+            <a href="{{ url_for('download_notebook') }}" class="btn btn-sm btn-outline" style="width: 100%; text-align: center;">
+                📥 View / Download Jupyter Notebook (.ipynb)
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

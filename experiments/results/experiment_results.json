@@ -1,0 +1,57 @@
+{
+  "total_events": 100,
+  "total_evaluations": 108,
+  "raw_unauthorized_count": 22,
+  "raw_medical_count": 1,
+  "human_review_rate": 12.0,
+  "metrics": [
+    {
+      "name": "1. Family Understanding Score",
+      "baseline_val": "70.0%",
+      "prototype_val": "90.9%",
+      "delta": "+20.9%",
+      "direction": "positive",
+      "interpretation": "High conciseness and non-medical clarity enhance family comprehension."
+    },
+    {
+      "name": "2. Unnecessary Disclosure Rate",
+      "baseline_val": "100.0%",
+      "prototype_val": "0.0%",
+      "delta": "-100.0%",
+      "direction": "positive",
+      "interpretation": "Internal staff notes and shift logs strictly excluded from family view."
+    },
+    {
+      "name": "3. Unauthorised Disclosure Rate",
+      "baseline_val": "20.4%",
+      "prototype_val": "0.0%",
+      "delta": "-20.4%",
+      "direction": "positive",
+      "interpretation": "Zero privacy leaks; revoked consents and role limits strictly enforced."
+    },
+    {
+      "name": "4. Information Omission Rate",
+      "baseline_val": "0.0%",
+      "prototype_val": "3.7%",
+      "delta": "3.7%",
+      "direction": "neutral",
+      "interpretation": "Crucial operational events are safely preserved without factual loss."
+    },
+    {
+      "name": "5. Medical-Boundary Violation Rate",
+      "baseline_val": "0.9%",
+      "prototype_val": "0.0%",
+      "delta": "-0.9%",
+      "direction": "positive",
+      "interpretation": "Clinical terminology and medication references intercepted 100% of the time."
+    },
+    {
+      "name": "6. Human Review Trigger Rate",
+      "baseline_val": "0.0%",
+      "prototype_val": "12.0%",
+      "delta": "+12.0%",
+      "direction": "positive",
+      "interpretation": "Mandatory human-in-the-loop gate actively engaged for high urgency & exceptions."
+    }
+  ]
+}

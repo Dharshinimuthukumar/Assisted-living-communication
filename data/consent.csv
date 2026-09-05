@@ -1,0 +1,6 @@
+consent_id,resident_id,family_id,care_activity_updates,routine_updates,exception_updates,communication_questions,consent_status,effective_date
+CON001,RES001,FAM001,1,1,1,1,Active,2026-01-10
+CON002,RES001,FAM002,1,1,0,1,Active,2026-01-12
+CON003,RES002,FAM003,0,0,1,0,Active,2026-01-15
+CON004,RES003,FAM004,0,0,0,0,Revoked,2026-02-01
+CON005,RES004,FAM005,1,1,1,1,Active,2026-01-05

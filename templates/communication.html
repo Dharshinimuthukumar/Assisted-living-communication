@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Family Communication - Assisted-Living Facility{% endblock %}
+
+{% block content %}
+<!-- Sub-Navigation Tabs: Communication & Questions -->
+<div class="sub-nav-tabs">
+    <a href="{{ url_for('communication_view') }}" class="sub-nav-tab active">Family Updates</a>
+    <a href="{{ url_for('questions_list') }}" class="sub-nav-tab">Family Questions</a>
+</div>
+
+<!-- Obvious Operational Workflow Indicator -->
+<div class="workflow-stepper">
+    <div class="workflow-step {% if pipeline_result %}completed{% else %}active{% endif %}">
+        <span class="workflow-step-num">1</span>
+        <span>CARE EVENT</span>
+    </div>
+    <span class="workflow-arrow">→</span>
+    <div class="workflow-step {% if pipeline_result and pipeline_result.role_check and pipeline_result.role_check.passed and pipeline_result.consent_check and pipeline_result.consent_check.passed %}completed{% else %}active{% endif %}">
+        <span class="workflow-step-num">2</span>
+        <span>PERMISSION</span>
+    </div>
+    <span class="workflow-arrow">→</span>
+    <div class="workflow-step {% if pipeline_result and pipeline_result.generated_summary %}completed{% else %}active{% endif %}">
+        <span class="workflow-step-num">3</span>
+        <span>FAMILY SUMMARY</span>
+    </div>
+    <span class="workflow-arrow">→</span>
+    <div class="workflow-step {% if pipeline_result and pipeline_result.review_status == 'Auto-Approved' %}completed{% elif pipeline_result and pipeline_result.review_status == 'Pending Review' %}active{% else %}active{% endif %}">
+        <span class="workflow-step-num">4</span>
+        <span>HUMAN REVIEW</span>
+    </div>
+    <span class="workflow-arrow">→</span>
+    <div class="workflow-step {% if pipeline_result and pipeline_result.disclosure_status == 'Approved' %}completed{% else %}active{% endif %}">
+        <span class="workflow-step-num">5</span>
+        <span>FAMILY UPDATE</span>
+    </div>
+</div>
+
+<!-- Selector Bar -->
+<div class="card" style="padding: 16px 20px; margin-bottom: 20px;">
+    <form method="GET" action="{{ url_for('communication_view') }}" style="display: grid; grid-template-columns: 2fr 2fr auto; gap: 16px; align-items: end;">
+        <div class="form-group" style="margin: 0;">
+            <label class="form-label" for="event_id">Select Care Event:</label>
+            <select name="event_id" id="event_id" class="form-control" required>
+                {% for evt in events %}
+                <option value="{{ evt.event_id }}" {% if selected_event_id == evt.event_id %}selected{% endif %}>
+                    {{ evt.resident_name }} — {{ evt.event_type }} ({{ evt.urgency }} Urgency)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+            <label class="form-label" for="family_id">Select Family Contact:</label>
+            <select name="family_id" id="family_id" class="form-control" required>
+                {% for fam in family_members %}
+                <option value="{{ fam.family_id }}" {% if selected_family_id == fam.family_id %}selected{% endif %}>
+                    {{ fam.family_name }} ({{ fam.relationship }} of {{ fam.resident_name }}) — {{ fam.role }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-primary" style="height: 42px;">
+                Generate Summary
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if pipeline_result %}
+<!-- MAIN COMMUNICATION CARD -->
+<div class="card" style="border: 1px solid #cbd5e1; box-shadow: var(--shadow-sm); padding: 24px;">
+    <!-- Top Header: Resident, Family Member, Family Role -->
+    <div style="border-bottom: 1px solid var(--surface-border); padding-bottom: 14px; margin-bottom: 16px;">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+            FAMILY COMMUNICATION
+        </span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; flex-wrap: wrap; gap: 12px;">
+            <div style="font-size: 1.05rem; line-height: 1.6;">
+                <div><strong>Resident:</strong> {{ pipeline_result.resident_name }}</div>
+                <div><strong>Family Member:</strong> {{ pipeline_result.family_name }}</div>
+                <div><strong>Family Role:</strong> <span class="badge badge-info">{{ pipeline_result.family_role }}</span></div>
+            </div>
+            <div>
+                {% if pipeline_result.resident_id %}
+                <a href="{{ url_for('resident_detail', resident_id=pipeline_result.resident_id) }}" class="btn btn-sm btn-outline">
+                    View Resident
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Prominent Status Display -->
+    {% if pipeline_result.disclosure_status == 'Blocked' %}
+        <div class="prominent-status-box status-blocked">
+            <div class="prominent-status-title">🔴 UPDATE BLOCKED</div>
+            <div class="prominent-status-desc">
+                {{ pipeline_result.block_reason }}
+            </div>
+        </div>
+    {% elif pipeline_result.disclosure_status == 'Pending Review' %}
+        <div class="prominent-status-box status-review">
+            <div class="prominent-status-title">🟡 REVIEW REQUIRED</div>
+            <div class="prominent-status-desc">
+                This operational update requires supervisory review before family release due to high urgency, exception, or safety boundaries.
+            </div>
+        </div>
+    {% else %}
+        <div class="prominent-status-box status-approved">
+            <div class="prominent-status-title">🟢 READY FOR FAMILY</div>
+            <div class="prominent-status-desc">
+                This operational update is approved and released to the family communication portal.
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Concise Main Information Sections -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px;">
+        <!-- CARE EVENT -->
+        <div style="background: #f8fafc; border: 1px solid var(--surface-border); border-radius: var(--radius-sm); padding: 16px;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">
+                CARE EVENT
+            </div>
+            <div style="font-size: 0.92rem; line-height: 1.6;">
+                <div><strong>Observation:</strong> {{ pipeline_result.original_observation or '[Incomplete Event Observation]' }}</div>
+                <div style="margin-top: 6px;">
+                    <strong>Consent Status:</strong> 
+                    <span class="badge {% if pipeline_result.consent_status == 'Active' %}badge-approved{% else %}badge-blocked{% endif %}">
+                        {{ pipeline_result.consent_status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAMILY UPDATE & REVIEW STATUS -->
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 16px;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 8px;">
+                FAMILY UPDATE
+            </div>
+            <div style="font-size: 0.95rem; color: #166534; line-height: 1.5; font-weight: 500;">
+                {% if pipeline_result.disclosure_status == 'Approved' %}
+                    "{{ pipeline_result.generated_summary }}"
+                {% elif pipeline_result.disclosure_status == 'Pending Review' %}
+                    <span style="color: #92400e; font-style: italic;">
+                        [Draft held in review queue: {{ pipeline_result.generated_summary or 'Held for review' }}]
+                    </span>
+                {% else %}
+                    <span style="color: #991b1b; font-style: italic;">
+                        [Protected: Information not shared with this family member]
+                    </span>
+                {% endif %}
+            </div>
+            <div style="margin-top: 10px; font-size: 0.85rem;">
+                <strong>REVIEW STATUS:</strong> 
+                <span class="badge {% if pipeline_result.review_status == 'Auto-Approved' or pipeline_result.review_status == 'Reviewed' %}badge-approved{% elif pipeline_result.review_status == 'Pending Review' %}badge-pending{% else %}badge-rejected{% endif %}">
+                    {{ pipeline_result.review_status }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons Row -->
+    <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
+        {% if pipeline_result.disclosure_status == 'Pending Review' and current_user.role in ['admin', 'staff'] %}
+            <a href="{{ url_for('review_queue') }}" class="btn btn-sm btn-primary">Send for Review</a>
+            <a href="{{ url_for('review_queue') }}" class="btn btn-sm btn-success">Approve</a>
+            <a href="{{ url_for('review_queue') }}" class="btn btn-sm btn-outline">Edit</a>
+            <a href="{{ url_for('review_queue') }}" class="btn btn-sm btn-danger">Reject</a>
+        {% endif %}
+    </div>
+
+    <!-- Collapsible Section: View Verification Details -->
+    <details class="clean-collapsible" style="margin-top: 20px;">
+        <summary>
+            <span>View Verification Details ▾</span>
+            <small style="color: var(--text-light); font-weight: normal;">Staff & Evaluator Pre-Disclosure Verification</small>
+        </summary>
+        <div class="clean-collapsible-content">
+            <table class="clean-verification-table">
+                <tbody>
+                    <tr>
+                        <td style="width: 250px;"><strong>1. Family Role Check</strong></td>
+                        <td>
+                            {% if pipeline_result.role_check.passed %}
+                                <span style="color: var(--success); font-weight: 600;">✓ Authorized</span>
+                            {% else %}
+                                <span style="color: var(--danger); font-weight: 600;">✗ Restricted</span>
+                            {% endif %}
+                            <span style="color: var(--text-muted); margin-left: 8px;">({{ pipeline_result.role_check.reason }})</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Resident Consent Check</strong></td>
+                        <td>
+                            {% if pipeline_result.consent_check.passed %}
+                                <span style="color: var(--success); font-weight: 600;">✓ Approved</span>
+                            {% else %}
+                                <span style="color: var(--danger); font-weight: 600;">✗ Blocked</span>
+                            {% endif %}
+                            <span style="color: var(--text-muted); margin-left: 8px;">({{ pipeline_result.consent_check.reason }})</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Safety / Medical Boundary Check</strong></td>
+                        <td>
+                            {% if pipeline_result.safety_check and pipeline_result.safety_check.passed %}
+                                <span style="color: var(--success); font-weight: 600;">✓ Passed</span>
+                                <span style="color: var(--text-muted); margin-left: 8px;">(Adheres strictly to operational facts)</span>
+                            {% elif pipeline_result.safety_check %}
+                                <span style="color: var(--danger); font-weight: 600;">⚠️ Medical Terms Detected</span>
+                                <span style="color: var(--danger); margin-left: 8px;">({{ pipeline_result.safety_check.flagged|join(', ') }})</span>
+                            {% else %}
+                                <span style="color: var(--text-muted);">Skipped (Disclosure blocked)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Human Review Gate</strong></td>
+                        <td>
+                            {% if pipeline_result.review_status == 'Auto-Approved' %}
+                                <span style="color: var(--success); font-weight: 600;">✓ Direct Release</span>
+                            {% elif pipeline_result.review_status == 'Pending Review' %}
+                                <span style="color: var(--warning); font-weight: 600;">🟡 Required</span>
+                                <span style="color: var(--text-muted); margin-left: 8px;">(Triggers: {{ pipeline_result.review_triggers|join(', ') }})</span>
+                            {% else %}
+                                <span style="color: var(--danger); font-weight: 600;">✗ Blocked / Rejected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <!-- Collapsible Section: Internal Staff Information (Staff and Admin Only) -->
+    {% if current_user.role in ['admin', 'staff'] %}
+    <details class="clean-collapsible">
+        <summary>
+            <span>Internal Staff Information ▾</span>
+            <small style="color: var(--internal); font-weight: normal;">Confidential Handover Notes</small>
+        </summary>
+        <div class="clean-collapsible-content">
+            <div style="font-size: 0.88rem;">
+                <strong style="color: var(--internal);">Internal Staff Record:</strong>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin: 2px 0 8px 0;">
+                    Confidential handover log — <em>NEVER automatically disclosed to family</em>.
+                </p>
+                <div style="background: var(--internal-bg); border: 1px dashed var(--internal-border); padding: 12px; border-radius: var(--radius-sm); color: #5b21b6;">
+                    {{ pipeline_result.internal_staff_note or 'No internal staff handover note recorded.' }}
+                </div>
+            </div>
+        </div>
+    </details>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Simplified Recent Family Communications -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h2 class="card-title">Recent Family Communications</h2>
+        <span class="badge badge-info">Delivered History</span>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Resident</th>
+                    <th>Family Member</th>
+                    <th>Role</th>
+                    <th>Family Communication Summary</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in historical_comms %}
+                <tr>
+                    <td><small>{{ c.created_at }}</small></td>
+                    <td><strong>{{ c.resident_name }}</strong></td>
+                    <td>{{ c.family_name }}</td>
+                    <td><span class="badge badge-info" style="font-size: 0.72rem;">{{ c.role }}</span></td>
+                    <td style="max-width: 380px;">
+                        {% if c.disclosure_status == 'Approved' %}
+                            <span style="color: #0f766e; font-weight: 500;">{{ c.generated_summary }}</span>
+                        {% elif c.disclosure_status == 'Pending Review' %}
+                            <span style="color: #b45309; font-style: italic;">[In Review] {{ c.generated_summary or 'Held for review' }}</span>
+                        {% else %}
+                            <span style="color: #b91c1c; font-style: italic;">[Blocked] {{ c.block_reason }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c.disclosure_status == 'Approved' %}
+                            <span class="badge badge-approved">Approved</span>
+                        {% elif c.disclosure_status == 'Blocked' %}
+                            <span class="badge badge-blocked">Blocked</span>
+                        {% else %}
+                            <span class="badge badge-pending">In Review</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+question_id,family_id,resident_id,question_text,category,status,created_at,staff_response,answered_by,answered_at
+QUE001,FAM001,RES001,Could you let me know if Devi enjoyed the afternoon music session today?,Activity,Answered,2026-09-03 16:00:00,"Yes! Devi actively participated, played the tambourine, and enjoyed singing with peers.",Madhu,2026-09-03 17:15:00
+QUE002,FAM003,RES002,What dosage of fever medicine or antibiotic should Ramesh take for his chest infection?,Medical Inquiry,Flagged Medical,2026-09-04 09:15:00,"Operational Support Only — This system communicates care activities and operational observations. It does not provide medical diagnosis, treatment recommendations, or medical advice. Your inquiry has been routed to facility nursing staff for clinical consultation.",Safety Checker (Automated),2026-09-04 09:15:01
+QUE003,FAM005,RES004,What time is Mohan scheduled for his courtyard walking routine tomorrow?,Routine,Pending,2026-09-04 11:30:00,,,

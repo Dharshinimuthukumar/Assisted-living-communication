@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Family Q&A - Assisted-Living Facility{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Family Operational Inquiries & Q&A</h1>
+        <p class="page-subtitle">Direct communication bridge between authorized family members and assisted-living staff</p>
+    </div>
+</div>
+
+<!-- Question Scope Guide -->
+<div class="card" style="background: #f0f9ff; border-color: #bae6fd; padding: 14px 20px;">
+    <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <span style="font-size: 1.4rem;">ℹ️</span>
+        <div>
+            <strong style="color: #0369a1; font-size: 0.95rem;">Permitted Operational Question Scope</strong>
+            <p style="font-size: 0.84rem; color: #075985; margin-top: 4px;">
+                Family members may inquire about daily activities, meal preferences, schedule timings, social participation, and general assisted-living routines.
+                <strong>Clinical inquiries, medication inquiries, or diagnostic questions cannot be answered by this system</strong> and are automatically routed for direct staff consultation.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Operational Question Form -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Submit an Operational Inquiry to Staff</h2>
+        <span class="badge badge-info">Logged in as: {{ current_user.display_name }}</span>
+    </div>
+
+    <!-- Live Medical Term Alert Container -->
+    <div id="medicalWarningBox" class="alert alert-warning" style="display: none; margin-bottom: 14px;"></div>
+
+    <form action="{{ url_for('submit_question') }}" method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="resident_id">Resident:</label>
+                <select name="resident_id" id="resident_id" class="form-control" required>
+                    {% for r in residents %}
+                    <option value="{{ r.resident_id }}">{{ r.resident_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="category">Operational Inquiry Category:</label>
+                <select name="category" id="category" class="form-control" required>
+                    <option value="Activity">Social Activities & Engagement</option>
+                    <option value="Meal">Meals & Dining</option>
+                    <option value="Routine">Daily Routine & Mobility</option>
+                    <option value="Schedule">Schedule & Facility Visits</option>
+                    <option value="General">General Facility Operations</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="questionTextInput">Inquiry Text:</label>
+            <textarea name="question_text" id="questionTextInput" class="form-control" rows="3" placeholder="e.g. Could you share how Devi enjoyed the afternoon music session today?" required></textarea>
+            <small style="color: var(--text-muted); font-size: 0.78rem;">
+                Try asking a medical question (e.g. <em>"What medication should my father take for his fever?"</em>) to test Case 5 interception!
+            </small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Send Operational Inquiry</button>
+    </form>
+</div>
+
+<!-- Questions History & Staff Responses -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h2 class="card-title">Inquiries & Staff Responses</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Family Member</th>
+                    <th>Resident</th>
+                    <th>Category</th>
+                    <th>Inquiry Details</th>
+                    <th>Status</th>
+                    <th>Staff Operational Response</th>
+                    <th>Staff Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in questions %}
+                <tr>
+                    <td><code>{{ q.question_id }}</code></td>
+                    <td>
+                        <strong>{{ q.family_name }}</strong><br>
+                        <small class="badge badge-info">{{ q.role }}</small>
+                    </td>
+                    <td>{{ q.resident_name }}</td>
+                    <td><span class="badge badge-minimal">{{ q.category }}</span></td>
+                    <td style="max-width: 250px;">
+                        <span style="font-size: 0.88rem;">{{ q.question_text }}</span><br>
+                        <small style="color: var(--text-muted);">{{ q.created_at }}</small>
+                    </td>
+                    <td>
+                        <span class="badge {% if q.status == 'Answered' %}badge-approved{% elif q.status == 'Pending' %}badge-pending{% elif q.status == 'Flagged Medical' %}badge-high{% else %}badge-info{% endif %}">
+                            {{ q.status }}
+                        </span>
+                    </td>
+                    <td style="max-width: 280px;">
+                        {% if q.staff_response %}
+                            <div style="background: #f8fafc; padding: 8px; border-radius: 4px; border: 1px solid var(--surface-border); font-size: 0.82rem;">
+                                {{ q.staff_response }}
+                                <div style="color: var(--text-light); font-size: 0.72rem; margin-top: 4px;">
+                                    — {{ q.answered_by }} ({{ q.answered_at }})
+                                </div>
+                            </div>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-style: italic; font-size: 0.82rem;">Awaiting staff response</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if q.status == 'Pending' and current_user.role in ['admin', 'staff'] %}
+                            <button onclick="openReplyModal('{{ q.question_id }}', '{{ q.question_text|replace("'", "\\'") }}')" class="btn btn-sm btn-secondary">
+                                Reply
+                            </button>
+                        {% else %}
+                            <span style="color: var(--text-light); font-size: 0.8rem;">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Reply to Question -->
+<div id="replyModal" class="modal-overlay">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="card-title">Staff Operational Response</h3>
+            <button onclick="closeModal('replyModal')" class="btn btn-sm btn-outline" style="border: none;">✕</button>
+        </div>
+        <form action="{{ url_for('answer_question') }}" method="POST">
+            <input type="hidden" name="question_id" id="reply_question_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Family Inquiry:</label>
+                    <div id="reply_question_text" style="background: #f8fafc; padding: 10px; border-radius: 4px; font-size: 0.88rem;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="staff_response">Operational Response (Observable facts only):</label>
+                    <textarea name="staff_response" id="staff_response" class="form-control" rows="3" placeholder="Provide reassuring, objective operational information..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('replyModal')" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn btn-primary">Send Response</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openReplyModal(qId, text) {
+    document.getElementById('reply_question_id').value = qId;
+    document.getElementById('reply_question_text').innerText = text;
+    openModal('replyModal');
+}
+</script>
+{% endblock %}

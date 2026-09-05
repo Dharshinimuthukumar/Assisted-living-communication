@@ -1,0 +1,6 @@
+family_id,family_name,relationship,resident_id,role,active_status
+FAM001,Kavi,Daughter,RES001,Primary Family Contact,1
+FAM002,Charu,Son,RES001,Secondary Family Contact,1
+FAM003,Hema,Daughter-in-law,RES002,Emergency Contact,1
+FAM004,Abi,Niece,RES003,View-Only Contact,1
+FAM005,Mala,Sister,RES004,Primary Family Contact,1

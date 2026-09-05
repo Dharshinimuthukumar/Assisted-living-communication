@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Family Members & Roles - Assisted-Living Facility{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Authorized Family Members & Designated Roles</h1>
+        <p class="page-subtitle">Role-based access boundaries: Primary, Secondary, Emergency, and View-Only Contacts</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Family ID</th>
+                    <th>Family Member</th>
+                    <th>Relationship</th>
+                    <th>Linked Resident</th>
+                    <th>Designated Role</th>
+                    <th>Role Access Boundaries</th>
+                    <th>Q&A Privilege</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fam in family_members %}
+                <tr>
+                    <td><code>{{ fam.family_id }}</code></td>
+                    <td><strong>{{ fam.family_name }}</strong></td>
+                    <td>{{ fam.relationship }}</td>
+                    <td>
+                        <a href="{{ url_for('resident_detail', resident_id=fam.resident_id) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                            {{ fam.resident_name }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge {% if fam.role == 'Primary Family Contact' %}badge-approved{% elif fam.role == 'Secondary Family Contact' %}badge-info{% elif fam.role == 'Emergency Contact' %}badge-high{% else %}badge-minimal{% endif %}">
+                            {{ fam.role }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.82rem; color: var(--text-muted); max-width: 260px;">
+                        {% if fam.role == 'Primary Family Contact' %}
+                            Full access to all operational summaries, routines, activities, and exceptions.
+                        {% elif fam.role == 'Secondary Family Contact' %}
+                            Routine activities, meals, and general updates.
+                        {% elif fam.role == 'Emergency Contact' %}
+                            Urgent operational exceptions and safety follow-ups only (routine logs filtered).
+                        {% else %}
+                            General activity status view only. Personal care and exceptions restricted.
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if fam.role in ['Primary Family Contact', 'Secondary Family Contact'] %}
+                            <span class="badge badge-approved">Enabled</span>
+                        {% else %}
+                            <span class="badge badge-rejected">Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-active">Active</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h2 class="card-title">Family Role Policy Matrix</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+        <div style="border-left: 4px solid var(--success); padding: 12px; background: #f8fafc; border-radius: 4px;">
+            <strong>Primary Family Contact</strong>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                Designated principal family representative. Receives daily routine updates, care activities, exception alerts, and holds full question-and-answer privileges.
+            </p>
+        </div>
+        <div style="border-left: 4px solid var(--info); padding: 12px; background: #f8fafc; border-radius: 4px;">
+            <strong>Secondary Family Contact</strong>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                Authorized family member receiving routine and activity updates. Exception notices depend on explicit resident consent permissions.
+            </p>
+        </div>
+        <div style="border-left: 4px solid var(--danger); padding: 12px; background: #f8fafc; border-radius: 4px;">
+            <strong>Emergency Contact</strong>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                Reserved for urgent operational exceptions and safety escalations. Daily routine operational chatter is filtered out to avoid alarm fatigue.
+            </p>
+        </div>
+        <div style="border-left: 4px solid var(--text-muted); padding: 12px; background: #f8fafc; border-radius: 4px;">
+            <strong>View-Only Contact</strong>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                Restricted family access. Can view general social and activity updates. Sensitive personal care logs and exceptions are blocked.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

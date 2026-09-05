@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Consent Management - Assisted-Living Facility{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Resident Information-Sharing Consent Matrix</h1>
+        <p class="page-subtitle">Granular resident-governed permissions: Care Activities, Routines, Exceptions, and Q&A Privileges</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Consent ID</th>
+                    <th>Resident</th>
+                    <th>Family Member</th>
+                    <th>Family Role</th>
+                    <th>Care Activities</th>
+                    <th>Routine Updates</th>
+                    <th>Exception Updates</th>
+                    <th>Family Q&A</th>
+                    <th>Consent Status</th>
+                    <th>Effective Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in consents %}
+                <tr>
+                    <td><code>{{ c.consent_id }}</code></td>
+                    <td><strong>{{ c.resident_name }}</strong></td>
+                    <td>{{ c.family_name }}</td>
+                    <td><span class="badge badge-info">{{ c.role }}</span></td>
+                    <td style="text-align: center;">
+                        {% if c.care_activity_updates %}
+                            <span class="badge badge-approved">✓ Enabled</span>
+                        {% else %}
+                            <span class="badge badge-rejected">✗ Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if c.routine_updates %}
+                            <span class="badge badge-approved">✓ Enabled</span>
+                        {% else %}
+                            <span class="badge badge-rejected">✗ Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if c.exception_updates %}
+                            <span class="badge badge-approved">✓ Enabled</span>
+                        {% else %}
+                            <span class="badge badge-rejected">✗ Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if c.communication_questions %}
+                            <span class="badge badge-approved">✓ Enabled</span>
+                        {% else %}
+                            <span class="badge badge-rejected">✗ Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge {% if c.consent_status == 'Active' %}badge-approved{% elif c.consent_status == 'Revoked' %}badge-blocked{% else %}badge-pending{% endif %}">
+                            {{ c.consent_status }}
+                        </span>
+                    </td>
+                    <td><small>{{ c.effective_date }}</small></td>
+                    <td>
+                        <form action="{{ url_for('toggle_consent_status', consent_id=c.consent_id) }}" method="POST" style="display: inline;">
+                            {% if c.consent_status == 'Active' %}
+                                <button type="submit" class="btn btn-sm btn-danger">Revoke</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 20px; background: #f0fdf4; border-color: #bbf7d0;">
+    <div class="card-header" style="border-color: #bbf7d0;">
+        <h2 class="card-title" style="color: #166534;">🛡️ Consent Enforcement Architecture</h2>
+    </div>
+    <p style="font-size: 0.88rem; color: #166534; line-height: 1.6;">
+        Resident autonomy is central to assisted-living dignity. The system verifies active consent status and specific category permissions <em>before</em> any summary is synthesized or displayed. If consent is revoked or disabled for a specific category, information disclosure is immediately halted, returning a standardized privacy protection notice.
+    </p>
+</div>
+{% endblock %}
