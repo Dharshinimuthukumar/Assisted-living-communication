@@ -34,6 +34,11 @@
     <!-- Live Medical Term Alert Container -->
     <div id="medicalWarningBox" class="alert alert-warning" style="display: none; margin-bottom: 14px;"></div>
 
+    {% if current_user.role == 'family' and current_user.family_role not in ['Primary Family Contact', 'Secondary Family Contact'] %}
+    <div class="alert alert-info" style="margin: 0;">
+        <strong>Direct Q&A Restricted:</strong> Your designated family role (<em>{{ current_user.family_role }}</em>) does not include direct staff inquiry privileges. Questions are reserved for designated Primary and Secondary family liaisons.
+    </div>
+    {% else %}
     <form action="{{ url_for('submit_question') }}" method="POST">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="form-group" style="margin: 0;">
@@ -66,6 +71,7 @@
 
         <button type="submit" class="btn btn-primary">Send Operational Inquiry</button>
     </form>
+    {% endif %}
 </div>
 
 <!-- Questions History & Staff Responses -->

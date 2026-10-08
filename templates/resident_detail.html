@@ -5,12 +5,18 @@
 {% block content %}
 <div class="page-header">
     <div>
+        {% if current_user.role in ['admin', 'staff'] %}
         <a href="{{ url_for('residents_list') }}" class="btn btn-sm btn-outline" style="margin-bottom: 8px;">← Back to Residents</a>
+        {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline" style="margin-bottom: 8px;">← Back to Dashboard</a>
+        {% endif %}
         <h1 class="page-title">{{ resident.resident_name }}</h1>
         <p class="page-subtitle">Resident ID: <code>{{ resident.resident_id }}</code> | Age Group: {{ resident.age_group }}</p>
     </div>
     <div>
+        {% if current_user.role in ['admin', 'staff'] %}
         <a href="{{ url_for('care_events_list') }}?resident_id={{ resident.resident_id }}" class="btn btn-primary">+ Log Event for Resident</a>
+        {% endif %}
     </div>
 </div>
 
@@ -40,7 +46,9 @@
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">Authorized Family Contacts & Consent</h2>
+            {% if current_user.role in ['admin', 'staff'] %}
             <a href="{{ url_for('consent_matrix') }}" class="btn btn-sm btn-outline">Manage Consent</a>
+            {% endif %}
         </div>
         <div class="table-responsive">
             <table class="data-table">
@@ -100,7 +108,9 @@
                     <th>Operational Observation</th>
                     <th>Assistance Level</th>
                     <th>Urgency</th>
+                    {% if current_user.role in ['admin', 'staff'] %}
                     <th>Internal Staff Note (Staff Only)</th>
+                    {% endif %}
                     <th>Action</th>
                 </tr>
             </thead>
@@ -118,21 +128,23 @@
                             {{ evt.urgency }}
                         </span>
                     </td>
+                    {% if current_user.role in ['admin', 'staff'] %}
                     <td>
                         <div class="staff-note-box" style="margin: 0; padding: 6px 10px;">
                             <span class="staff-note-badge">Internal Note</span>
                             <p style="margin: 0; font-size: 0.8rem;">{{ evt.staff_note or 'None' }}</p>
                         </div>
                     </td>
+                    {% endif %}
                     <td>
                         <a href="{{ url_for('communication_view') }}?event_id={{ evt.event_id }}" class="btn btn-sm btn-secondary">
-                            Process Update
+                            {% if current_user.role in ['admin', 'staff'] %}Process Update{% else %}View Update{% endif %}
                         </a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" style="text-align: center; color: var(--text-muted);">No care events recorded for this resident.</td>
+                    <td colspan="{% if current_user.role in ['admin', 'staff'] %}7{% else %}6{% endif %}" style="text-align: center; color: var(--text-muted);">No care events recorded for this resident.</td>
                 </tr>
                 {% endfor %}
             </tbody>

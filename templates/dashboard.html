@@ -12,6 +12,8 @@
     <div>
         {% if current_user.role in ['admin', 'staff'] %}
         <a href="{{ url_for('care_events_list') }}" class="btn btn-primary">+ Log Care Event</a>
+        {% elif current_user.role == 'family' and current_user.linked_resident_id %}
+        <a href="{{ url_for('resident_detail', resident_id=current_user.linked_resident_id) }}" class="btn btn-primary">Resident Profile</a>
         {% endif %}
         <a href="{{ url_for('communication_view') }}" class="btn btn-secondary" style="margin-left: 8px;">View Workflow</a>
     </div>
@@ -80,11 +82,14 @@
     <div>
         <strong>Family Inquiries:</strong> {{ metrics.total_questions }} total ({{ metrics.pending_questions }} pending reply)
     </div>
+    {% if current_user.role in ['admin', 'staff'] %}
     <div>
         <a href="{{ url_for('consent_matrix') }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Manage Consents →</a>
     </div>
+    {% endif %}
 </div>
 
+{% if current_user.role in ['admin', 'staff'] %}
 <!-- Streamlined Academic Demo Scenarios -->
 <div class="card">
     <div class="card-header">
@@ -162,6 +167,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- Streamlined Recent Communications Table -->
 <div class="card">

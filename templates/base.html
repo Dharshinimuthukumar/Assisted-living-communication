@@ -26,9 +26,14 @@
         {% if current_user %}
         <ul class="nav-links">
             <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+            {% if current_user.role in ['admin', 'staff'] %}
             <li><a href="{{ url_for('residents_list') }}" class="nav-link {% if active_page == 'residents' %}active{% endif %}">Residents</a></li>
             <li><a href="{{ url_for('care_events_list') }}" class="nav-link {% if active_page == 'care_events' %}active{% endif %}">Care Events</a></li>
+            {% elif current_user.role == 'family' and current_user.linked_resident_id %}
+            <li><a href="{{ url_for('resident_detail', resident_id=current_user.linked_resident_id) }}" class="nav-link {% if active_page == 'residents' %}active{% endif %}">Resident Profile</a></li>
+            {% endif %}
             <li><a href="{{ url_for('communication_view') }}" class="nav-link {% if active_page in ['communication', 'questions'] %}active{% endif %}">Communication</a></li>
+            {% if current_user.role in ['admin', 'staff'] %}
             <li><a href="{{ url_for('consent_matrix') }}" class="nav-link {% if active_page == 'consent' %}active{% endif %}">Consent</a></li>
             <li>
                 <a href="{{ url_for('review_queue') }}" class="nav-link {% if active_page == 'review_queue' %}active{% endif %}">
@@ -38,14 +43,18 @@
                     {% endif %}
                 </a>
             </li>
+            {% endif %}
+            {% if current_user.role == 'admin' %}
             <li><a href="{{ url_for('experiment_dashboard') }}" class="nav-link {% if active_page == 'experiment' %}active{% endif %}">Experiment</a></li>
+            {% endif %}
         </ul>
 
         <div class="nav-user">
             <span class="nav-user-badge">
                 <strong>{{ current_user.display_name }}</strong>
             </span>
-            <!-- Quick Demo User Switcher -->
+            {% if current_user.role in ['admin', 'staff'] %}
+            <!-- Quick Demo User Switcher (Staff & Admin Only) -->
             <select id="userSwitcher" class="user-switch-select" title="Switch Demo User Role">
                 <option value="" disabled selected>Switch User...</option>
                 <optgroup label="Staff & Admin">
@@ -60,6 +69,7 @@
                     <option value="Mala" {% if current_user.username == 'Mala' %}selected{% endif %}>Mala (Primary Contact)</option>
                 </optgroup>
             </select>
+            {% endif %}
             <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline" style="color: #ffffff; border-color: rgba(255,255,255,0.4);">Logout</a>
         </div>
         {% else %}
