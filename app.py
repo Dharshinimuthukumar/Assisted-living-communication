@@ -33,6 +33,11 @@ def get_db():
     return conn
 
 def login_required(f):
+    """
+    Session authentication decorator: ensures operational data, resident profiles,
+    and supervisory queues are accessible only by authenticated staff, admin, or family personas.
+    Unauthenticated requests are redirected to the login view with an advisory flash notice.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -40,6 +45,26 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+def role_required(*allowed_roles):
+    """
+    Decorator enforcing server-side role-based access control (RBAC).
+    Guarantees that unauthorized requests are blocked and redirected to the dashboard
+    with an informative error flash message.
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user_id' not in session:
+                flash("Please sign in to access the application.", "warning")
+                return redirect(url_for('login'))
+            user_role = session.get('role')
+            if user_role not in allowed_roles:
+                flash("Access Denied: You do not have permission to access this area.", "danger")
+                return redirect(url_for('dashboard'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 @app.context_processor
 def inject_global_context():
@@ -52,8 +77,15 @@ def inject_global_context():
         row = cursor.fetchone()
         if row:
             user = dict(row)
-        cursor.execute("SELECT COUNT(*) FROM communications WHERE review_status = 'Pending Review'")
-        pending_count = cursor.fetchone()[0]
+            if user.get('linked_family_id'):
+                cursor.execute("SELECT resident_id, role FROM family_members WHERE family_id = ?", (user['linked_family_id'],))
+                fam_row = cursor.fetchone()
+                if fam_row:
+                    user['linked_resident_id'] = fam_row['resident_id']
+                    user['family_role'] = fam_row['role']
+        if session.get('role') in ['admin', 'staff']:
+            cursor.execute("SELECT COUNT(*) FROM communications WHERE review_status = 'Pending Review'")
+            pending_count = cursor.fetchone()[0]
         conn.close()
     return {
         'current_user': user,
@@ -74,16 +106,26 @@ def login():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
-        conn.close()
 
         if user and check_password_hash(user['password_hash'], password):
             session['user_id'] = user['user_id']
             session['username'] = user['username']
             session['role'] = user['role']
             session['display_name'] = user['display_name']
+            session['linked_family_id'] = user['linked_family_id']
+
+            if user['linked_family_id']:
+                cursor.execute("SELECT resident_id FROM family_members WHERE family_id = ?", (user['linked_family_id'],))
+                fam_row = cursor.fetchone()
+                session['linked_resident_id'] = fam_row['resident_id'] if fam_row else None
+            else:
+                session['linked_resident_id'] = None
+
+            conn.close()
             flash(f"Signed in as {user['display_name']} ({user['role'].capitalize()}).", "success")
             return redirect(url_for('dashboard'))
         else:
+            conn.close()
             flash("Invalid credentials. Use demo passwords: admin123, staff123, <name>123", "danger")
 
     return render_template('login.html', active_page='login')
@@ -97,20 +139,34 @@ def logout():
 @app.route('/switch_user/<username>')
 def switch_user(username):
     """Quick demo switcher for academic review presentation."""
+    # Security: Family users cannot switch personas to bypass role restrictions
+    if 'user_id' in session and session.get('role') == 'family':
+        flash("Access Denied: Persona switching is not permitted from family accounts. Please sign out first.", "danger")
+        return redirect(url_for('dashboard'))
+
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
-    conn.close()
 
     if user:
         session['user_id'] = user['user_id']
         session['username'] = user['username']
         session['role'] = user['role']
         session['display_name'] = user['display_name']
+        session['linked_family_id'] = user['linked_family_id']
+
+        if user['linked_family_id']:
+            cursor.execute("SELECT resident_id FROM family_members WHERE family_id = ?", (user['linked_family_id'],))
+            fam_row = cursor.fetchone()
+            session['linked_resident_id'] = fam_row['resident_id'] if fam_row else None
+        else:
+            session['linked_resident_id'] = None
+
         flash(f"Switched persona to {user['display_name']} ({user['role'].capitalize()}).", "info")
     else:
         flash(f"User '{username}' not found.", "danger")
+    conn.close()
     return redirect(request.referrer or url_for('dashboard'))
 
 # ----------------------------------------------------
@@ -129,49 +185,96 @@ def dashboard():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Collect dashboard metrics
-    cursor.execute("SELECT COUNT(*) FROM residents WHERE active_status = 1")
-    total_residents = cursor.fetchone()[0]
+    user_role = session.get('role')
+    user_fam_id = session.get('linked_family_id')
+    user_res_id = session.get('linked_resident_id')
 
-    cursor.execute("SELECT COUNT(*) FROM care_events")
-    total_care_events = cursor.fetchone()[0]
+    if user_role == 'family':
+        # Scoped metrics strictly for this family contact and resident
+        total_residents = 1 if user_res_id else 0
+        cursor.execute("SELECT COUNT(*) FROM care_events WHERE resident_id = ?", (user_res_id,))
+        total_care_events = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM communications WHERE review_status = 'Pending Review'")
-    pending_reviews = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM communications WHERE family_id = ? AND review_status = 'Pending Review'", (user_fam_id,))
+        pending_reviews = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM communications WHERE disclosure_status = 'Approved'")
-    approved_comms = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM communications WHERE family_id = ? AND disclosure_status = 'Approved'", (user_fam_id,))
+        approved_comms = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM communications WHERE disclosure_status = 'Blocked'")
-    blocked_comms = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM communications WHERE family_id = ? AND disclosure_status = 'Blocked'", (user_fam_id,))
+        blocked_comms = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM care_events WHERE urgency = 'High'")
-    high_urgency_events = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM care_events WHERE resident_id = ? AND urgency = 'High'", (user_res_id,))
+        high_urgency_events = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM consent WHERE consent_status = 'Active'")
-    active_consents = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM consent WHERE family_id = ? AND consent_status = 'Active'", (user_fam_id,))
+        active_consents = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM consent WHERE consent_status = 'Revoked'")
-    revoked_consents = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM consent WHERE family_id = ? AND consent_status = 'Revoked'", (user_fam_id,))
+        revoked_consents = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM consent")
-    total_consents = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM consent WHERE family_id = ?", (user_fam_id,))
+        total_consents = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM questions")
-    total_questions = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM questions WHERE family_id = ?", (user_fam_id,))
+        total_questions = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM questions WHERE status = 'Pending'")
-    pending_questions = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM questions WHERE family_id = ? AND status = 'Pending'", (user_fam_id,))
+        pending_questions = cursor.fetchone()[0]
 
-    # Recent communications
-    cursor.execute("""
-        SELECT c.*, r.resident_name, f.family_name, f.role
-        FROM communications c
-        JOIN residents r ON c.resident_id = r.resident_id
-        JOIN family_members f ON c.family_id = f.family_id
-        ORDER BY c.created_at DESC LIMIT 8
-    """)
-    recent_comms = [dict(row) for row in cursor.fetchall()]
+        # Recent communications strictly scoped to this family contact
+        cursor.execute("""
+            SELECT c.*, r.resident_name, f.family_name, f.role
+            FROM communications c
+            JOIN residents r ON c.resident_id = r.resident_id
+            JOIN family_members f ON c.family_id = f.family_id
+            WHERE c.family_id = ?
+            ORDER BY c.created_at DESC LIMIT 8
+        """, (user_fam_id,))
+        recent_comms = [dict(row) for row in cursor.fetchall()]
+    else:
+        # Full facility-wide metrics for administrator and care staff
+        cursor.execute("SELECT COUNT(*) FROM residents WHERE active_status = 1")
+        total_residents = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM care_events")
+        total_care_events = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM communications WHERE review_status = 'Pending Review'")
+        pending_reviews = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM communications WHERE disclosure_status = 'Approved'")
+        approved_comms = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM communications WHERE disclosure_status = 'Blocked'")
+        blocked_comms = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM care_events WHERE urgency = 'High'")
+        high_urgency_events = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM consent WHERE consent_status = 'Active'")
+        active_consents = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM consent WHERE consent_status = 'Revoked'")
+        revoked_consents = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM consent")
+        total_consents = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM questions")
+        total_questions = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM questions WHERE status = 'Pending'")
+        pending_questions = cursor.fetchone()[0]
+
+        cursor.execute("""
+            SELECT c.*, r.resident_name, f.family_name, f.role
+            FROM communications c
+            JOIN residents r ON c.resident_id = r.resident_id
+            JOIN family_members f ON c.family_id = f.family_id
+            ORDER BY c.created_at DESC LIMIT 8
+        """)
+        recent_comms = [dict(row) for row in cursor.fetchall()]
 
     conn.close()
 
@@ -197,6 +300,7 @@ def dashboard():
 
 @app.route('/residents')
 @login_required
+@role_required('admin', 'staff')
 def residents_list():
     conn = get_db()
     cursor = conn.cursor()
@@ -214,24 +318,44 @@ def residents_list():
 @app.route('/residents/<resident_id>')
 @login_required
 def resident_detail(resident_id):
+    user_role = session.get('role')
+    user_fam_id = session.get('linked_family_id')
+    user_res_id = session.get('linked_resident_id')
+
+    # Security: Family users can only view profile information for their own associated resident
+    if user_role == 'family' and resident_id != user_res_id:
+        flash("Access Denied: You are not authorized to view information for other residents.", "danger")
+        return redirect(url_for('dashboard'))
+
     conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM residents WHERE resident_id = ?", (resident_id,))
     res_row = cursor.fetchone()
     if not res_row:
+        conn.close()
         flash(f"Resident '{resident_id}' not found.", "danger")
-        return redirect(url_for('residents_list'))
+        return redirect(url_for('dashboard' if user_role == 'family' else 'residents_list'))
     resident = dict(res_row)
 
-    # Family members with consent details
-    cursor.execute("""
-        SELECT f.*, c.consent_status, c.care_activity_updates, c.routine_updates,
-               c.exception_updates, c.communication_questions
-        FROM family_members f
-        LEFT JOIN consent c ON f.resident_id = c.resident_id AND f.family_id = c.family_id
-        WHERE f.resident_id = ?
-    """, (resident_id,))
+    # Family members with consent details (family users only see their own contact record)
+    if user_role == 'family':
+        cursor.execute("""
+            SELECT f.*, c.consent_status, c.care_activity_updates, c.routine_updates,
+                   c.exception_updates, c.communication_questions
+            FROM family_members f
+            LEFT JOIN consent c ON f.resident_id = c.resident_id AND f.family_id = c.family_id
+            WHERE f.resident_id = ? AND f.family_id = ?
+        """, (resident_id, user_fam_id))
+    else:
+        cursor.execute("""
+            SELECT f.*, c.consent_status, c.care_activity_updates, c.routine_updates,
+                   c.exception_updates, c.communication_questions
+            FROM family_members f
+            LEFT JOIN consent c ON f.resident_id = c.resident_id AND f.family_id = c.family_id
+            WHERE f.resident_id = ?
+            ORDER BY f.family_id ASC
+        """, (resident_id,))
     family_contacts = [dict(row) for row in cursor.fetchall()]
 
     # Care events
@@ -255,6 +379,7 @@ def resident_detail(resident_id):
 
 @app.route('/care_events')
 @login_required
+@role_required('admin', 'staff')
 def care_events_list():
     resident_id = request.args.get('resident_id', '')
     urgency = request.args.get('urgency', '')
@@ -295,6 +420,7 @@ def care_events_list():
 
 @app.route('/care_events/add', methods=['POST'])
 @login_required
+@role_required('admin', 'staff')
 def add_care_event():
     resident_id = request.form.get('resident_id')
     event_type = request.form.get('event_type')
@@ -337,6 +463,7 @@ def add_care_event():
 
 @app.route('/family_members')
 @login_required
+@role_required('admin', 'staff')
 def family_members_list():
     conn = get_db()
     cursor = conn.cursor()
@@ -352,6 +479,7 @@ def family_members_list():
 
 @app.route('/consent')
 @login_required
+@role_required('admin', 'staff')
 def consent_matrix():
     conn = get_db()
     cursor = conn.cursor()
@@ -368,6 +496,7 @@ def consent_matrix():
 
 @app.route('/consent/toggle/<consent_id>', methods=['POST'])
 @login_required
+@role_required('admin', 'staff')
 def toggle_consent_status(consent_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -388,58 +517,113 @@ def toggle_consent_status(consent_id):
 @app.route('/communication')
 @login_required
 def communication_view():
+    """
+    Dual-pane operational pipeline inspector:
+    Serves as the primary academic demonstration interface contrasting the internal
+    caregiver shift record (with confidential notes) against the synthesized family summary.
+    Allows evaluators and staff to inspect pipeline gates and verify note elimination.
+    """
     event_id = request.args.get('event_id')
     family_id = request.args.get('family_id')
+
+    user_role = session.get('role')
+    user_fam_id = session.get('linked_family_id')
+    user_res_id = session.get('linked_resident_id')
 
     conn = get_db()
     cursor = conn.cursor()
 
-    # Load care events for selection
-    cursor.execute("""
-        SELECT e.event_id, e.event_type, e.urgency, r.resident_name
-        FROM care_events e
-        JOIN residents r ON e.resident_id = r.resident_id
-        ORDER BY e.event_datetime DESC LIMIT 40
-    """)
-    events = [dict(row) for row in cursor.fetchall()]
+    if user_role == 'family':
+        # Security: Family users can only view their own designated family updates
+        family_id = user_fam_id
 
-    # Load family members for selection
-    cursor.execute("""
-        SELECT f.family_id, f.family_name, f.relationship, f.role, r.resident_name
-        FROM family_members f
-        JOIN residents r ON f.resident_id = r.resident_id
-        ORDER BY f.family_id ASC
-    """)
-    family_members = [dict(row) for row in cursor.fetchall()]
+        # Events dropdown: strictly scoped to the family user's associated resident
+        cursor.execute("""
+            SELECT e.event_id, e.event_type, e.urgency, r.resident_name
+            FROM care_events e
+            JOIN residents r ON e.resident_id = r.resident_id
+            WHERE e.resident_id = ?
+            ORDER BY e.event_datetime DESC LIMIT 40
+        """, (user_res_id,))
+        events = [dict(row) for row in cursor.fetchall()]
 
-    # If no event_id specified, pick the first event
-    if not event_id and events:
-        event_id = events[0]['event_id']
+        # Recipient dropdown: strictly scoped to the family user's own contact record
+        cursor.execute("""
+            SELECT f.family_id, f.family_name, f.relationship, f.role, r.resident_name
+            FROM family_members f
+            JOIN residents r ON f.resident_id = r.resident_id
+            WHERE f.family_id = ?
+        """, (user_fam_id,))
+        family_members = [dict(row) for row in cursor.fetchall()]
 
-    # If no family_id specified, find the family linked to that event's resident
-    if not family_id and event_id:
-        cursor.execute("SELECT resident_id FROM care_events WHERE event_id = ?", (event_id,))
-        evt_row = cursor.fetchone()
-        if evt_row:
-            cursor.execute("SELECT family_id FROM family_members WHERE resident_id = ? LIMIT 1", (evt_row['resident_id'],))
-            fam_row = cursor.fetchone()
-            if fam_row:
-                family_id = fam_row['family_id']
+        # Verify event belongs to this resident
+        if event_id:
+            cursor.execute("SELECT resident_id FROM care_events WHERE event_id = ?", (event_id,))
+            evt_row = cursor.fetchone()
+            if not evt_row or evt_row['resident_id'] != user_res_id:
+                flash("Access Denied: You cannot view communications for another resident's care events.", "danger")
+                conn.close()
+                return redirect(url_for('communication_view'))
+        elif events:
+            event_id = events[0]['event_id']
+
+        # Historical communications strictly scoped to this family contact
+        cursor.execute("""
+            SELECT c.*, r.resident_name, f.family_name, f.role
+            FROM communications c
+            JOIN residents r ON c.resident_id = r.resident_id
+            JOIN family_members f ON c.family_id = f.family_id
+            WHERE c.family_id = ?
+            ORDER BY c.created_at DESC LIMIT 15
+        """, (user_fam_id,))
+        historical_comms = [dict(row) for row in cursor.fetchall()]
+    else:
+        # Load care events for selection
+        cursor.execute("""
+            SELECT e.event_id, e.event_type, e.urgency, r.resident_name
+            FROM care_events e
+            JOIN residents r ON e.resident_id = r.resident_id
+            ORDER BY e.event_datetime DESC LIMIT 40
+        """)
+        events = [dict(row) for row in cursor.fetchall()]
+
+        # Load family members for selection
+        cursor.execute("""
+            SELECT f.family_id, f.family_name, f.relationship, f.role, r.resident_name
+            FROM family_members f
+            JOIN residents r ON f.resident_id = r.resident_id
+            ORDER BY f.family_id ASC
+        """)
+        family_members = [dict(row) for row in cursor.fetchall()]
+
+        # If no event_id specified, pick the first event
+        if not event_id and events:
+            event_id = events[0]['event_id']
+
+        # If no family_id specified, find the family linked to that event's resident
+        if not family_id and event_id:
+            cursor.execute("SELECT resident_id FROM care_events WHERE event_id = ?", (event_id,))
+            evt_row = cursor.fetchone()
+            if evt_row:
+                cursor.execute("SELECT family_id FROM family_members WHERE resident_id = ? LIMIT 1", (evt_row['resident_id'],))
+                fam_row = cursor.fetchone()
+                if fam_row:
+                    family_id = fam_row['family_id']
+
+        # Historical communications ledger
+        cursor.execute("""
+            SELECT c.*, r.resident_name, f.family_name, f.role
+            FROM communications c
+            JOIN residents r ON c.resident_id = r.resident_id
+            JOIN family_members f ON c.family_id = f.family_id
+            ORDER BY c.created_at DESC LIMIT 15
+        """)
+        historical_comms = [dict(row) for row in cursor.fetchall()]
 
     pipeline_result = None
     if event_id and family_id:
         # Run communication pipeline
         pipeline_result = process_care_event_for_family(conn, event_id, family_id, save_to_db=False)
-
-    # Historical communications ledger
-    cursor.execute("""
-        SELECT c.*, r.resident_name, f.family_name, f.role
-        FROM communications c
-        JOIN residents r ON c.resident_id = r.resident_id
-        JOIN family_members f ON c.family_id = f.family_id
-        ORDER BY c.created_at DESC LIMIT 15
-    """)
-    historical_comms = [dict(row) for row in cursor.fetchall()]
 
     conn.close()
 
@@ -456,7 +640,11 @@ def communication_view():
 
 @app.route('/api/generate_update', methods=['POST'])
 def api_generate_update():
-    """REST API endpoint for communication pipeline execution."""
+    """
+    REST API endpoint for programmatic communication pipeline execution.
+    Persists results to the database (save_to_db=True) as external API calls represent
+    live production event transmissions that must be recorded in communications ledger.
+    """
     data = request.get_json() or {}
     event_id = data.get('event_id')
     family_id = data.get('family_id')
@@ -464,7 +652,23 @@ def api_generate_update():
     if not event_id or not family_id:
         return jsonify({'success': False, 'error': 'event_id and family_id are required.'}), 400
 
+    user_role = session.get('role')
+    user_fam_id = session.get('linked_family_id')
+    user_res_id = session.get('linked_resident_id')
+
+    # Security check: Family users cannot generate updates for other contacts
+    if user_role == 'family' and family_id != user_fam_id:
+        return jsonify({'success': False, 'error': 'Access Denied: You cannot generate updates for other family members.'}), 403
+
     conn = get_db()
+    if user_role == 'family':
+        cursor = conn.cursor()
+        cursor.execute("SELECT resident_id FROM care_events WHERE event_id = ?", (event_id,))
+        evt = cursor.fetchone()
+        if not evt or evt['resident_id'] != user_res_id:
+            conn.close()
+            return jsonify({'success': False, 'error': "Access Denied: You cannot access events for another resident."}), 403
+
     result = process_care_event_for_family(conn, event_id, family_id, save_to_db=True)
     conn.close()
     return jsonify(result)
@@ -475,6 +679,7 @@ def api_generate_update():
 
 @app.route('/review_queue')
 @login_required
+@role_required('admin', 'staff')
 def review_queue():
     conn = get_db()
     cursor = conn.cursor()
@@ -508,7 +713,13 @@ def review_queue():
 
 @app.route('/review/submit', methods=['POST'])
 @login_required
+@role_required('admin', 'staff')
 def submit_review_action():
+    """
+    Processes human-in-the-loop review decisions for communications held in the review queue.
+    Ensures that flagged messages receive intentional staff sign-off and writes an immutable
+    audit entry to 'review_logs' for compliance tracking and regulatory accountability.
+    """
     comm_id = request.form.get('comm_id')
     action_taken = request.form.get('action_taken') # 'Approve', 'Edit', 'Reject', 'Escalate'
     edited_summary = request.form.get('edited_summary', '').strip()
@@ -518,6 +729,11 @@ def submit_review_action():
     conn = get_db()
     cursor = conn.cursor()
 
+    # Route action to appropriate disclosure status:
+    # - Approve: verifies summary meets safety/dignity standards, releasing it to family
+    # - Edit: enables staff refinement of wording without discarding valid operational news
+    # - Reject: permanently suppresses disclosure, recording block reason for family inquiries
+    # - Escalate: flags complex edge cases for senior clinical/administrative review
     if action_taken == 'Approve':
         cursor.execute("""
             UPDATE communications
@@ -543,7 +759,8 @@ def submit_review_action():
             WHERE comm_id = ?
         """, (comm_id,))
 
-    # Log action
+    # Immutable audit trail: Assisted-living facilities require strict regulatory accountability.
+    # Every human review action, timestamp, reviewer identity, and justification note is persisted.
     cursor.execute("SELECT COUNT(*) FROM review_logs")
     log_count = cursor.fetchone()[0] + 1
     log_id = f"LOG{log_count:03d}"
@@ -567,20 +784,38 @@ def submit_review_action():
 @app.route('/questions')
 @login_required
 def questions_list():
+    user_role = session.get('role')
+    user_fam_id = session.get('linked_family_id')
+    user_res_id = session.get('linked_resident_id')
+
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT resident_id, resident_name FROM residents ORDER BY resident_name ASC")
-    residents = [dict(row) for row in cursor.fetchall()]
+    if user_role == 'family':
+        cursor.execute("SELECT resident_id, resident_name FROM residents WHERE resident_id = ?", (user_res_id,))
+        residents = [dict(row) for row in cursor.fetchall()]
 
-    cursor.execute("""
-        SELECT q.*, r.resident_name, f.family_name, f.role
-        FROM questions q
-        JOIN residents r ON q.resident_id = r.resident_id
-        JOIN family_members f ON q.family_id = f.family_id
-        ORDER BY q.created_at DESC
-    """)
-    questions = [dict(row) for row in cursor.fetchall()]
+        cursor.execute("""
+            SELECT q.*, r.resident_name, f.family_name, f.role
+            FROM questions q
+            JOIN residents r ON q.resident_id = r.resident_id
+            JOIN family_members f ON q.family_id = f.family_id
+            WHERE q.family_id = ?
+            ORDER BY q.created_at DESC
+        """, (user_fam_id,))
+        questions = [dict(row) for row in cursor.fetchall()]
+    else:
+        cursor.execute("SELECT resident_id, resident_name FROM residents ORDER BY resident_name ASC")
+        residents = [dict(row) for row in cursor.fetchall()]
+
+        cursor.execute("""
+            SELECT q.*, r.resident_name, f.family_name, f.role
+            FROM questions q
+            JOIN residents r ON q.resident_id = r.resident_id
+            JOIN family_members f ON q.family_id = f.family_id
+            ORDER BY q.created_at DESC
+        """)
+        questions = [dict(row) for row in cursor.fetchall()]
 
     conn.close()
     return render_template(
@@ -593,28 +828,47 @@ def questions_list():
 @app.route('/questions/submit', methods=['POST'])
 @login_required
 def submit_question():
+    """
+    Submits family questions through a 3-tier boundary enforcement pipeline:
+    1. Role check: restricts inquiries to authorized family liaisons (Primary/Secondary).
+    2. Consent check: ensures the resident explicitly permits family communication questions.
+    3. Safety classification: intercepts clinical/diagnostic inquiries, redirecting them to
+       nursing staff rather than answering medical questions via automated operational tools.
+    """
     resident_id = request.form.get('resident_id')
     category = request.form.get('category', 'General')
     question_text = request.form.get('question_text', '').strip()
 
+    user_role = session.get('role')
+    user_fam_id = session.get('linked_family_id')
+    user_res_id = session.get('linked_resident_id')
+
     conn = get_db()
     cursor = conn.cursor()
 
-    # Determine requesting family member
-    cursor.execute("SELECT linked_family_id FROM users WHERE user_id = ?", (session.get('user_id'),))
-    u_row = cursor.fetchone()
-    fam_id = u_row['linked_family_id'] if u_row and u_row['linked_family_id'] else 'FAM001'
+    if user_role == 'family':
+        fam_id = user_fam_id
+        if resident_id != user_res_id:
+            flash("Access Denied: You cannot submit questions for another resident.", "danger")
+            conn.close()
+            return redirect(url_for('questions_list'))
+    else:
+        # Determine requesting family member
+        cursor.execute("SELECT linked_family_id FROM users WHERE user_id = ?", (session.get('user_id'),))
+        u_row = cursor.fetchone()
+        fam_id = u_row['linked_family_id'] if u_row and u_row['linked_family_id'] else 'FAM001'
 
     cursor.execute("SELECT * FROM family_members WHERE family_id = ?", (fam_id,))
-    family = dict(cursor.fetchone())
+    family_row = cursor.fetchone()
+    family = dict(family_row) if family_row else {}
 
-    # Step 1: Check role permission
+    # Step 1: Check role permission (restricts inquiries to primary/secondary liaisons)
     if not can_submit_questions(family.get('role')):
         flash(f"Submission Blocked: {family.get('role')} role does not permit submitting direct questions to staff.", "danger")
         conn.close()
         return redirect(url_for('questions_list'))
 
-    # Step 2: Check consent permission
+    # Step 2: Check consent permission (validates resident opt-in for family questions)
     cursor.execute("SELECT * FROM consent WHERE resident_id = ? AND family_id = ?", (resident_id, fam_id))
     consent_row = cursor.fetchone()
     consent = dict(consent_row) if consent_row else None
@@ -625,6 +879,7 @@ def submit_question():
         return redirect(url_for('questions_list'))
 
     # Step 3: Safety Checker (Case 5 - Medical Question Boundary)
+    # Intercepts clinical/diagnostic terminology to prevent non-medical tools from answering medical inquiries
     is_op, safety_response = classify_question(question_text)
 
     cursor.execute("SELECT COUNT(*) FROM questions")
@@ -633,7 +888,7 @@ def submit_question():
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     if not is_op:
-        # Intercepted Medical Inquiry
+        # Intercepted Medical Inquiry: immediately redirects family to clinical nursing team
         cursor.execute("""
             INSERT INTO questions (
                 question_id, family_id, resident_id, question_text, category,
@@ -648,7 +903,7 @@ def submit_question():
         flash("Operational Support Notice: Your inquiry contains clinical terms. It was redirected to nursing staff rather than processed as an operational question.", "warning")
         return redirect(url_for('questions_list'))
 
-    # Standard Operational Question
+    # Standard Operational Question (routine facility, visit, or activity coordination)
     cursor.execute("""
         INSERT INTO questions (
             question_id, family_id, resident_id, question_text, category,
@@ -666,6 +921,7 @@ def submit_question():
 
 @app.route('/questions/answer', methods=['POST'])
 @login_required
+@role_required('admin', 'staff')
 def answer_question():
     question_id = request.form.get('question_id')
     staff_response = request.form.get('staff_response', '').strip()
@@ -691,6 +947,7 @@ def answer_question():
 
 @app.route('/experiment')
 @login_required
+@role_required('admin')
 def experiment_dashboard():
     json_path = os.path.join(RESULTS_DIR, 'experiment_results.json')
     chart_path = os.path.join(BASE_DIR, 'static', 'images', 'metrics_comparison.png')
@@ -711,6 +968,7 @@ def experiment_dashboard():
 
 @app.route('/experiment/run', methods=['POST'])
 @login_required
+@role_required('admin')
 def run_experiment_action():
     results = run_experiment()
     flash(f"Empirical benchmark successfully executed across {results['total_evaluations']} synthetic event pairings.", "success")
@@ -718,6 +976,7 @@ def run_experiment_action():
 
 @app.route('/experiment/download_notebook')
 @login_required
+@role_required('admin')
 def download_notebook():
     nb_path = os.path.join(BASE_DIR, 'experiments', 'experiment.ipynb')
     if os.path.exists(nb_path):
@@ -732,6 +991,11 @@ def download_notebook():
 @app.route('/run_scenario/<scenario>')
 @login_required
 def run_scenario(scenario):
+    """
+    Academic demo route providing rapid-access shortcuts to evaluate benchmark scenarios.
+    Maps core demonstration fixtures (Journeys 1 & 2, Cases 1-4) directly into the
+    interactive pipeline inspector to illustrate consent, role, and safety boundaries.
+    """
     scenarios = {
         'journey_1': ('EVT001', 'FAM001', 'Journey 1: Normal Activity -> Devi Raman to Kavi (Approved)'),
         'journey_2': ('EVT002', 'FAM001', 'Journey 2: High Urgency Mobility Exception -> Devi to Kavi (Pending Review)'),
@@ -741,8 +1005,15 @@ def run_scenario(scenario):
         'case_4': ('EVT006', 'FAM005', 'Case 4: Missing Information -> Mohan to Mala with blank observation (Pending Review)')
     }
 
+    user_role = session.get('role')
+    user_fam_id = session.get('linked_family_id')
+
     if scenario in scenarios:
         evt_id, fam_id, desc = scenarios[scenario]
+        # Security: Family users cannot run demo scenarios targeting other family personas or residents
+        if user_role == 'family' and fam_id != user_fam_id:
+            flash("Access Denied: You cannot run demonstration scenarios for other residents or family members.", "danger")
+            return redirect(url_for('dashboard'))
         flash(f"Demonstration Executed: {desc}", "info")
         return redirect(url_for('communication_view', event_id=evt_id, family_id=fam_id))
 
